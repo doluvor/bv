@@ -300,6 +300,14 @@ object Prefs {
             )
         }
 
+    var showDebugInfo: Boolean
+        get() = runBlocking {
+            dsm.getPreferenceFlow(PrefKeys.prefShowDebugInfoRequest).first()
+        }
+        set(value) = runBlocking {
+            dsm.editPreference(PrefKeys.prefShowDebugInfo, value)
+        }
+
     var blacklistUser: Boolean
         get() = runBlocking { dsm.getPreferenceFlow(PrefKeys.prefBlacklistUserRequest).first() }
         set(value) = runBlocking { dsm.editPreference(PrefKeys.prefBlacklistUserKey, value) }
@@ -361,6 +369,7 @@ object PrefKeys {
     val prefShowedRemoteControllerPanelDemoKey = booleanPreferencesKey("showed_rcpd")
     val prefPreferOfficialCdn = booleanPreferencesKey("prefer_official_cdn")
     val prefDefaultDanmakuMask = booleanPreferencesKey("prefer_enable_webmark")
+    val prefShowDebugInfo = booleanPreferencesKey("show_debug_info")
     val prefEnableFfmpegAudioRenderer = booleanPreferencesKey("enable_ffmpeg_audio_renderer")
     val prefBlacklistUserKey = booleanPreferencesKey("blacklist_user")
     val prefThemeTypeKey = intPreferencesKey("theme_type")
@@ -419,6 +428,7 @@ object PrefKeys {
         PreferenceRequest(prefShowedRemoteControllerPanelDemoKey, false)
     val prefPreferOfficialCdnRequest = PreferenceRequest(prefPreferOfficialCdn, false)
     val prefDefaultDanmakuMaskRequest = PreferenceRequest(prefDefaultDanmakuMask, false)
+    val prefShowDebugInfoRequest = PreferenceRequest(prefShowDebugInfo, false)
     val prefEnableFfmpegEndererRequest = PreferenceRequest(prefEnableFfmpegAudioRenderer, false)
     val prefBlacklistUserRequest = PreferenceRequest(prefBlacklistUserKey, false)
     val prefThemeTypeRequest = PreferenceRequest(prefThemeTypeKey, ThemeType.Auto.ordinal)
