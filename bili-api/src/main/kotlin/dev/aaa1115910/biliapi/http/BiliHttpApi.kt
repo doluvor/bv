@@ -302,7 +302,7 @@ object BiliHttpApi {
     ): DanmakuResponse {
         val xmlChannel = client.get("/x/v1/dm/list.so") {
             parameter("oid", cid)
-            header("Cookie", "SESSDATA=$sessData;")
+            header("Cookie", "SESSDATA=;")
         }.bodyAsChannel()
 
         val dbFactory = DocumentBuilderFactory.newInstance()
