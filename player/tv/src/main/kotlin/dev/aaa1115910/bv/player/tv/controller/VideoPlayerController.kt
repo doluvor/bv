@@ -318,7 +318,7 @@ fun VideoPlayerController(
             }
     ) {
         content()
-        if (BuildConfig.DEBUG || videoPlayerConfigData.currentShowDebugInfo) {
+        if (videoPlayerConfigData.currentShowDebugInfo) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
