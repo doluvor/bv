@@ -1,5 +1,6 @@
 package dev.aaa1115910.bv.tv.screens.main
 
+import dev.aaa1115910.bv.AppConfiguration
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -139,12 +140,14 @@ fun NavigationDrawerScope.DrawerContent(
             modifier = Modifier.focusRestorer(centerFocusRequester),
             verticalArrangement = Arrangement.Center
         ) {
-            listOf(
-                DrawerItem.Search,
-                DrawerItem.Home,
-                DrawerItem.UGC,
-                DrawerItem.PGC,
-            ).forEach { item ->
+            buildList {
+                add(DrawerItem.Search)
+                add(DrawerItem.Home)
+                if (!AppConfiguration.minimalMode) {
+                    add(DrawerItem.UGC)
+                    add(DrawerItem.PGC)
+                }
+            }.forEach { item ->
                 item {
                     NavigationDrawerItem(
                         modifier = Modifier
