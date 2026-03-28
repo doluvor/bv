@@ -3,6 +3,7 @@
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 import java.io.FileInputStream
+import java.net.URI
 import java.util.Properties
 
 plugins {
@@ -291,8 +292,8 @@ tasks.register("downloadBlacklist") {
             assetsDir.mkdirs()
         }
         println("Downloading resource from $resourceUrl to ${outputFile.absolutePath}")
-        java.net.URI(resourceUrl).toURL().openStream().use { input ->
-            outputFile.outputStream().use { output ->
+        URI(resourceUrl).toURL().openStream().use { input: InputStream ->
+            outputFile.outputStream().use { output: java.io.FileOutputStream ->
                 input.copyTo(output)
             }
             println("Download complete: ${outputFile.absolutePath}")
