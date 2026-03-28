@@ -16,7 +16,12 @@
       "Bash(wmic process:*)",
       "Bash(cmd.exe:*)",
       "Bash(find:*)",
-      "Bash(adb devices:*)"
+      "Bash(adb devices:*)",
+      "Bash(git tag:*)",
+      "Bash(git add:*)",
+      "Bash(test:*)",
+      "Bash(cp:*)",
+      "Bash(cat:*)"
     ]
   }
 }
