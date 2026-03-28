@@ -78,6 +78,7 @@ android {
         create("tv") {
             dimension = "platform"
             // No suffix - keeps the original app ID
+            buildConfigField("boolean", "MINIMAL_MODE", "${AppConfiguration.minimalMode}")
         }
     }
 
