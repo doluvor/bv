@@ -94,6 +94,7 @@ fun VideoPlayerV3Screen(
             currentSubtitleBackgroundOpacity = playerViewModel.currentSubtitleBackgroundOpacity,
             currentSubtitleBottomPadding = playerViewModel.currentSubtitleBottomPadding,
             currentPlayMode = playerViewModel.currentPlayMode,
+            currentShowDebugInfo = playerViewModel.currentShowDebugInfo,
             incognitoMode = Prefs.incognitoMode,
         ),
         LocalVideoPlayerDanmakuMasksData provides VideoPlayerDanmakuMasksData(
