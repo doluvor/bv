@@ -195,6 +195,10 @@ fun VideoPlayerV3Screen(
             onPlayModeChange = { playMode ->
                 Prefs.defaultPlayMode = playMode
                 playerViewModel.currentPlayMode = playMode
+            },
+            onShowDebugInfoChange = { enabled ->
+                Prefs.showDebugInfo = enabled
+                playerViewModel.currentShowDebugInfo = enabled
             }
         )
     }
