@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +44,13 @@ fun VideoPlayerV3Screen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val logger = KotlinLogging.logger { }
+
+    // Handle when no next video is available
+    LaunchedEffect(Unit) {
+        playerViewModel.onNoNextVideo = {
+            (context as Activity).finish()
+        }
+    }
 
     CompositionLocalProvider(
         LocalVideoPlayerSeekThumbData provides VideoPlayerSeekThumbData(

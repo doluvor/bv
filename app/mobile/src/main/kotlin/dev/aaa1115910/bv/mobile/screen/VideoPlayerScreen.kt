@@ -70,9 +70,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.origeek.imageViewer.previewer.ImagePreviewer
 import com.origeek.imageViewer.previewer.ImagePreviewerState
@@ -141,6 +141,17 @@ fun VideoPlayerScreen(
     var isVideoFullscreen by rememberSaveable { mutableStateOf(false) }
     val forcePortrait =
         windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact || windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact
+
+    // Handle when no next video is available
+    LaunchedEffect(Unit) {
+        playerViewModel.onNoNextVideo = {
+            if (isVideoFullscreen) {
+                isVideoFullscreen = false
+            } else {
+                (context as Activity).finish()
+            }
+        }
+    }
 
     val pictures = remember { mutableStateListOf<Picture>() }
     val previewerState = rememberPreviewerState(
@@ -688,7 +699,7 @@ fun VideoPlayerScreen(
         imageLoader = { index ->
             val imageRequest = ImageRequest.Builder(LocalContext.current)
                 .data(pictures[index].url)
-                .size(coil.size.Size.ORIGINAL)
+                .size(coil3.size.Size.ORIGINAL)
                 .build()
             // 获取图片的初始大小
             rememberAsyncImagePainter(imageRequest)

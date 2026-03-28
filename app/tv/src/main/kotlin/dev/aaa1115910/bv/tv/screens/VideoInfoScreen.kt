@@ -100,10 +100,9 @@ import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Tab
 import androidx.tv.material3.TabRow
 import androidx.tv.material3.Text
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-import coil.transform.BlurTransformation
+import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
 import dev.aaa1115910.biliapi.entity.ApiType
 import dev.aaa1115910.biliapi.entity.FavoriteFolderMetadata
 import dev.aaa1115910.biliapi.entity.video.Dimension
@@ -504,20 +503,10 @@ fun VideoInfoScreen(
             modifier = modifier
         ) { innerPadding ->
             Box(
-                Modifier.padding(innerPadding)
+                Modifier
+                    .padding(innerPadding)
+                    .background(MaterialTheme.colorScheme.background)
             ) {
-                Image(
-                    modifier = Modifier.fillMaxSize(),
-                    painter = rememberAsyncImagePainter(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(if (videoDetailViewModel.videoDetail?.ugcSeason != null) videoDetailViewModel.videoDetail!!.ugcSeason!!.cover else videoDetailViewModel.videoDetail!!.cover)
-                            .transformations(BlurTransformation(LocalContext.current, 20f, 5f))
-                            .build()
-                    ),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    alpha = 0.6f
-                )
                 LazyColumn(
                     contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -526,9 +515,6 @@ fun VideoInfoScreen(
                         Column(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            if (containsVerticalScreenVideo) {
-                                ArgueTip(text = stringResource(R.string.video_info_argue_tip_vertical_screen))
-                            }
                             if (videoDetailViewModel.videoDetail?.argueTip != null) {
                                 ArgueTip(text = videoDetailViewModel.videoDetail!!.argueTip!!)
                             }

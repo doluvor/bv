@@ -86,10 +86,21 @@ class BVApp : Application() {
     private fun initApiConfig() {
         BiliAppConf.osVersion = Build.VERSION.RELEASE
         BiliAppConf.model = Build.MODEL
-        BiliWebConf.webViewVersion = runCatching {
-            WebViewCompat.getCurrentLoadedWebViewPackage()!!.versionName!!
-                .substringBefore(".").toInt()
-        }.getOrDefault(144)
+        BiliWebConf.webViewVersion = getCurrentWebViewVersion()
+    }
+
+    private fun getCurrentWebViewVersion(): Int {
+        return try {
+            // Use reflection to access restricted API
+            val method = WebViewCompat::class.java.getDeclaredMethod(
+                "getCurrentLoadedWebViewPackage",
+                Context::class.java
+            )
+            val packageInfo = method.invoke(null, applicationContext) as android.content.pm.PackageInfo
+            packageInfo.versionName?.substringBefore(".")?.toInt() ?: 144
+        } catch (e: Exception) {
+            144 // fallback version
+        }
     }
 
     fun initRepository() {

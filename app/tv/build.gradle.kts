@@ -16,6 +16,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("boolean", "MINIMAL_MODE", "${AppConfiguration.minimalMode}")
     }
 
     buildTypes {
@@ -44,6 +45,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     lint {

@@ -1,9 +1,10 @@
 package dev.aaa1115910.bv.tv.component.search
 
-import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -11,13 +12,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.DenseListItem
 import androidx.tv.material3.Text
-import coil.ImageLoader
-import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.request.ImageRequest
-import coil.size.Size
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import coil3.size.Size
 
 @Composable
 fun SearchKeyword(
@@ -28,25 +26,15 @@ fun SearchKeyword(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val imageLoader = ImageLoader.Builder(context)
-        .components {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                add(ImageDecoderDecoder.Factory())
-            } else {
-                add(GifDecoder.Factory())
-            }
-        }
-        .build()
     val painter = rememberAsyncImagePainter(
         ImageRequest.Builder(context)
             .data(data = leadingIcon)
             .size(Size.ORIGINAL)
             .build(),
-        imageLoader = imageLoader,
         contentScale = ContentScale.FillHeight
     )
 
-    if (leadingIcon != "" && painter.state is AsyncImagePainter.State.Success) {
+    if (leadingIcon != "" && painter.state.collectAsState().value is AsyncImagePainter.State.Success) {
         DenseListItem(
             modifier = modifier,
             selected = false,

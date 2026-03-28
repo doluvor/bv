@@ -38,7 +38,7 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import dev.aaa1115910.bv.ui.theme.BVTheme
 import dev.aaa1115910.bv.util.requestFocus
 
@@ -82,7 +82,6 @@ fun UserPanel(
             UserPanelMyItem(
                 modifier = Modifier
                     .width(300.dp)
-                    .focusRequester(focusRequester)
                     .onPreviewKeyEvent {
                         when (it.nativeKeyEvent.keyCode) {
                             KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_LEFT -> {
@@ -104,6 +103,7 @@ fun UserPanel(
                 UserPanelSmallItem(
                     modifier = Modifier
                         .width(buttonWidth)
+                        .focusRequester(focusRequester)
                         .onPreviewKeyEvent {
                             when (it.nativeKeyEvent.keyCode) {
                                 KeyEvent.KEYCODE_DPAD_LEFT -> {

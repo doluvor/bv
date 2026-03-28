@@ -63,7 +63,7 @@ import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import dev.aaa1115910.bv.R
 import dev.aaa1115910.bv.entity.BvScheme
 import dev.aaa1115910.bv.entity.db.UserDB

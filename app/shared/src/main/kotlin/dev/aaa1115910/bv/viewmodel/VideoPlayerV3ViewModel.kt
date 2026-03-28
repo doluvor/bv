@@ -99,7 +99,7 @@ class VideoPlayerV3ViewModel(
     var currentDanmakuArea by mutableFloatStateOf(Prefs.defaultDanmakuArea)
     var currentDanmakuMask by mutableStateOf(Prefs.defaultDanmakuMask)
     var currentShowDebugInfo by mutableStateOf(Prefs.showDebugInfo)
-    var currentSubtitleId by mutableLongStateOf(-1L)
+    var currentSubtitleId by mutableLongStateOf(Prefs.defaultSubtitleId)
     var currentSubtitleData = mutableStateListOf<SubtitleItem>()
     var currentSubtitleFontSize by mutableStateOf(Prefs.defaultSubtitleFontSize)
     var currentSubtitleBackgroundOpacity by mutableFloatStateOf(Prefs.defaultSubtitleBackgroundOpacity)
@@ -125,6 +125,8 @@ class VideoPlayerV3ViewModel(
 
     var playerIconIdle by mutableStateOf("")
     var playerIconMoving by mutableStateOf("")
+
+    var onNoNextVideo: (() -> Unit)? = null
 
     private var currentAid = 0L
     var currentCid by mutableLongStateOf(0L)
@@ -441,8 +443,26 @@ class VideoPlayerV3ViewModel(
     }
 
     private suspend fun updateSubtitle() {
+        val wasSubtitleEnabled = currentSubtitleId != -1L
         currentSubtitleId = -1
         currentSubtitleData.clear()
+
+        if (!wasSubtitleEnabled) {
+            logger.fInfo { "Subtitle is disabled, skipping subtitle API call" }
+            availableSubtitle.clear()
+            availableSubtitle.add(
+                Subtitle(
+                    id = -1,
+                    lang = "",
+                    langDoc = "关闭",
+                    url = "",
+                    type = SubtitleType.CC,
+                    aiType = SubtitleAiType.Normal,
+                    aiStatus = SubtitleAiStatus.None
+                )
+            )
+            return
+        }
 
         runCatching {
             val subtitleData = videoPlayRepository.getSubtitle(
@@ -542,6 +562,7 @@ class VideoPlayerV3ViewModel(
                     currentSubtitleData.clear()
                     currentSubtitleId = -1
                 }
+                Prefs.defaultSubtitleId = -1L
                 return@launch
             }
             var subtitleName = ""
@@ -556,6 +577,7 @@ class VideoPlayerV3ViewModel(
                     currentSubtitleId = id
                     currentSubtitleData.swapList(subtitleData)
                 }
+                Prefs.defaultSubtitleId = id
             }.onFailure {
                 logger.fInfo { "Load subtitle failed: ${it.stackTraceToString()}" }
                 addLogs("加载字幕 $subtitleName 失败: ${it.localizedMessage}")
@@ -602,6 +624,11 @@ class VideoPlayerV3ViewModel(
     }
 
     private suspend fun updateDanmakuMask() {
+        if (!currentDanmakuMask) {
+            logger.fInfo { "Danmaku mask is disabled, skipping API call" }
+            danmakuMasks.clear()
+            return
+        }
         runCatching {
             val masks = videoPlayRepository.getDanmakuMask(
                 aid = currentAid,
@@ -693,6 +720,10 @@ class VideoPlayerV3ViewModel(
                 seasonId = firstVideo.seasonId,
                 continuePlayNext = true
             )
+        } else {
+            // No next video available, trigger callback to return to video info page
+            logger.info { "No next video available, returning to video info page" }
+            onNoNextVideo?.invoke()
         }
     }
 }

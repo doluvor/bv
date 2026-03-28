@@ -47,6 +47,12 @@ class HistoryViewModel(
         }
     }
 
+    fun clearData() {
+        histories.clear()
+        cursor = 0L
+        noMore = false
+    }
+
     private suspend fun updateHistories(context: Context = BVApp.context) {
         if (updating || noMore) return
         logger.fInfo { "Updating histories with params [cursor=$cursor, apiType=${Prefs.apiType}]" }

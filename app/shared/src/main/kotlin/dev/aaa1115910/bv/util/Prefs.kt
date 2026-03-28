@@ -193,6 +193,10 @@ object Prefs {
             )
         }
 
+    var defaultSubtitleId: Long
+        get() = runBlocking { dsm.getPreferenceFlow(PrefKeys.prefDefaultSubtitleIdRequest).first() }
+        set(value) = runBlocking { dsm.editPreference(PrefKeys.prefDefaultSubtitleIdKey, value) }
+
     var showFps: Boolean
         get() = runBlocking { dsm.getPreferenceFlow(PrefKeys.prefShowFpsRequest).first() }
         set(value) = runBlocking { dsm.editPreference(PrefKeys.prefShowFpsKey, value) }
@@ -353,6 +357,7 @@ object PrefKeys {
     val prefDefaultSubtitleFontSizeKey = intPreferencesKey("dsfs")
     val prefDefaultSubtitleBackgroundOpacityKey = floatPreferencesKey("dsbo")
     val prefDefaultSubtitleBottomPaddingKey = intPreferencesKey("dsbp")
+    val prefDefaultSubtitleIdKey = longPreferencesKey("dsi")
     val prefShowFpsKey = booleanPreferencesKey("sf")
     val prefBuvidKey = stringPreferencesKey("random_buvid")
     val prefBuvid3Key = stringPreferencesKey("random_buvid3")
@@ -404,6 +409,7 @@ object PrefKeys {
         PreferenceRequest(prefDefaultSubtitleBackgroundOpacityKey, 0.4f)
     val prefDefaultSubtitleBottomPaddingRequest =
         PreferenceRequest(prefDefaultSubtitleBottomPaddingKey, 12)
+    val prefDefaultSubtitleIdRequest = PreferenceRequest(prefDefaultSubtitleIdKey, -1L)
     val prefShowFpsRequest = PreferenceRequest(prefShowFpsKey, false)
     val prefBuvidRequest = PreferenceRequest(prefBuvidKey, "")
     val prefBuvid3Request = PreferenceRequest(prefBuvid3Key, "")

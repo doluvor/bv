@@ -1,6 +1,6 @@
 package dev.aaa1115910.bv.tv.screens.main
 
-import dev.aaa1115910.bv.AppConfiguration
+import dev.aaa1115910.bv.tv.BuildConfig
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.Search
@@ -43,7 +44,7 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
 import androidx.tv.material3.rememberDrawerState
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import dev.aaa1115910.bv.ui.theme.BVTheme
 import dev.aaa1115910.bv.util.ifElse
 import dev.aaa1115910.bv.util.isDpadRight
@@ -143,7 +144,8 @@ fun NavigationDrawerScope.DrawerContent(
             buildList {
                 add(DrawerItem.Search)
                 add(DrawerItem.Home)
-                if (!AppConfiguration.minimalMode) {
+                add(DrawerItem.History)
+                if (!BuildConfig.MINIMAL_MODE) {
                     add(DrawerItem.UGC)
                     add(DrawerItem.PGC)
                 }
@@ -193,6 +195,7 @@ enum class DrawerItem(
     User(displayName = "点击登录", displayIcon = Icons.Default.AccountCircle),
     Search(displayName = "搜索", displayIcon = Icons.Default.Search),
     Home(displayName = "首页", displayIcon = Icons.Default.Home),
+    History(displayName = "历史记录", displayIcon = Icons.Default.History),
     UGC(displayName = "UGC", displayIcon = Icons.Default.OndemandVideo),
     PGC(displayName = "PGC", displayIcon = Icons.Default.Movie),
     Settings(displayName = "设置", displayIcon = Icons.Default.Settings), ;

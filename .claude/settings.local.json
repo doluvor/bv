@@ -1,0 +1,22 @@
+{
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist:*)",
+      "Bash(cd:*)",
+      "Bash(git show:*)",
+      "Bash(cd G:\\\\Project\\\\bv:*)",
+      "Bash(tail:*)",
+      "Bash(./gradlew :player:shared:compileDebugKotlin:*)",
+      "Bash(ls:*)",
+      "Bash(handle:*)",
+      "Bash(wmic process:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(find:*)",
+      "Bash(adb devices:*)"
+    ]
+  }
+}
