@@ -1,6 +1,6 @@
 package dev.aaa1115910.bv.tv.screens.main
 
-import dev.aaa1115910.bv.tv.BuildConfig
+import dev.aaa1115910.bv.BuildConfig
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
