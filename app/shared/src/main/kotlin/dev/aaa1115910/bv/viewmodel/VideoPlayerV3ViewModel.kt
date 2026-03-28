@@ -98,6 +98,7 @@ class VideoPlayerV3ViewModel(
     }
     var currentDanmakuArea by mutableFloatStateOf(Prefs.defaultDanmakuArea)
     var currentDanmakuMask by mutableStateOf(Prefs.defaultDanmakuMask)
+    var currentShowDebugInfo by mutableStateOf(Prefs.showDebugInfo)
     var currentSubtitleId by mutableLongStateOf(-1L)
     var currentSubtitleData = mutableStateListOf<SubtitleItem>()
     var currentSubtitleFontSize by mutableStateOf(Prefs.defaultSubtitleFontSize)
@@ -412,7 +413,7 @@ class VideoPlayerV3ViewModel(
 
     suspend fun loadDanmaku(cid: Long) {
         runCatching {
-            val danmakuXmlData = BiliHttpApi.getDanmakuXml(cid = cid, sessData = Prefs.sessData)
+            val danmakuXmlData = BiliHttpApi.getDanmakuXml(cid = cid, sessData = "")
 
             val danmakuItemDataList = danmakuXmlData.data.map {
                 DanmakuItemData(
