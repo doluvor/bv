@@ -25,3 +25,15 @@ app/src/
 2. Copied Room database schema files
 3. Fixed BuildConfig imports
 4. Added MINIMAL_MODE BuildConfig field to tv flavor
+
+## Build Configuration
+- Product Flavors: mobile (with .mobile suffix), tv (no suffix - keeps original app ID)
+- Build Variants: liteMobileDebug, liteTvDebug, defaultMobileDebug, defaultTvDebug, etc.
+- Channel Dimension: lite, default
+- Platform Dimension: mobile, tv
+
+## Migration Benefits
+- TV builds now only compile TV-specific code (faster builds)
+- Standard Android product flavor approach
+- Single module structure simplifies dependencies
+- TV app ID unchanged: dev.aaa1115910.bv
