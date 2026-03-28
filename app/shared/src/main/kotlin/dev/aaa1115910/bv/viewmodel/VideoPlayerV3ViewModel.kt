@@ -413,7 +413,7 @@ class VideoPlayerV3ViewModel(
 
     suspend fun loadDanmaku(cid: Long) {
         runCatching {
-            val danmakuXmlData = BiliHttpApi.getDanmakuXml(cid = cid, sessData = "")
+            val danmakuXmlData = BiliHttpApi.getDanmakuXml(cid = cid, sessData = Prefs.sessData)
 
             val danmakuItemDataList = danmakuXmlData.data.map {
                 DanmakuItemData(
