@@ -2,6 +2,7 @@ package dev.aaa1115910.bv.player.entity
 
 import android.content.Context
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.ClearAll
 import androidx.compose.material.icons.outlined.ClosedCaption
 import androidx.compose.material.icons.outlined.Image
@@ -13,7 +14,8 @@ enum class VideoPlayerMenuNavItem(private val strRes: Int, val icon: ImageVector
     Picture(R.string.video_player_menu_nav_picture, Icons.Outlined.Image),
     Danmaku(R.string.video_player_menu_nav_danmaku, Icons.Outlined.ClearAll),
     ClosedCaption(R.string.video_player_menu_nav_subtitle, Icons.Outlined.ClosedCaption),
-    Others(R.string.video_player_menu_nav_others, Icons.Outlined.MoreVert);
+    Others(R.string.video_player_menu_nav_others, Icons.Outlined.MoreVert),
+    Debug(R.string.video_player_menu_nav_debug, Icons.Outlined.BugReport);
 
     fun getDisplayName(context: Context) = context.getString(strRes)
 }
