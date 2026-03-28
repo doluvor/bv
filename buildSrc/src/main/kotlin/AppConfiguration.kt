@@ -21,7 +21,7 @@ object AppConfiguration {
     var googleServicesAvailable = true
     const val blacklistUrl =
         "https://raw.githubusercontent.com/aaa1115910/bv-blacklist/main/blacklist.bin"
-    const val minimalMode: Boolean = false
+    const val minimalMode: Boolean = true
 
     init {
         initConfigurations()
