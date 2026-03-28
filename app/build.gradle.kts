@@ -3,6 +3,8 @@
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.net.URI
 import java.util.Properties
 
