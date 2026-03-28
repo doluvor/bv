@@ -53,6 +53,7 @@ import dev.aaa1115910.bv.player.entity.VideoPlayerConfigData
 import dev.aaa1115910.bv.player.entity.VideoPlayerMenuNavItem
 import dev.aaa1115910.bv.player.tv.controller.playermenu.ClosedCaptionMenuList
 import dev.aaa1115910.bv.player.tv.controller.playermenu.DanmakuMenuList
+import dev.aaa1115910.bv.player.tv.controller.playermenu.DebugMenuList
 import dev.aaa1115910.bv.player.tv.controller.playermenu.MenuNavList
 import dev.aaa1115910.bv.player.tv.controller.playermenu.OthersMenuList
 import dev.aaa1115910.bv.player.tv.controller.playermenu.PictureMenuList
@@ -78,7 +79,8 @@ fun MenuController(
     onSubtitleSizeChange: (TextUnit) -> Unit,
     onSubtitleBackgroundOpacityChange: (Float) -> Unit,
     onSubtitleBottomPadding: (Dp) -> Unit,
-    onPlayModeChange: (PlayMode) -> Unit
+    onPlayModeChange: (PlayMode) -> Unit,
+    onShowDebugInfoChange: (Boolean) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val defaultFocusRequester = remember { FocusRequester() }
@@ -115,7 +117,8 @@ fun MenuController(
                 onSubtitleSizeChange = onSubtitleSizeChange,
                 onSubtitleBackgroundOpacityChange = onSubtitleBackgroundOpacityChange,
                 onSubtitleBottomPadding = onSubtitleBottomPadding,
-                onPlayModeChange = onPlayModeChange
+                onPlayModeChange = onPlayModeChange,
+                onShowDebugInfoChange = onShowDebugInfoChange
             )
         }
     }
@@ -139,7 +142,8 @@ fun MenuController(
     onSubtitleSizeChange: (TextUnit) -> Unit,
     onSubtitleBackgroundOpacityChange: (Float) -> Unit,
     onSubtitleBottomPadding: (Dp) -> Unit,
-    onPlayModeChange: (PlayMode) -> Unit
+    onPlayModeChange: (PlayMode) -> Unit,
+    onShowDebugInfoChange: (Boolean) -> Unit
 ) {
     var selectedNavItem by remember { mutableStateOf(VideoPlayerMenuNavItem.Picture) }
     var focusState by remember { mutableStateOf(MenuFocusState.MenuNav) }
@@ -177,7 +181,8 @@ fun MenuController(
                     onSubtitleSizeChange = onSubtitleSizeChange,
                     onSubtitleBackgroundOpacityChange = onSubtitleBackgroundOpacityChange,
                     onSubtitleBottomPadding = onSubtitleBottomPadding,
-                    onPlayModeChange = onPlayModeChange
+                    onPlayModeChange = onPlayModeChange,
+                    onShowDebugInfoChange = onShowDebugInfoChange
                 )
                 MenuNavList(
                     modifier = Modifier
@@ -220,6 +225,7 @@ private fun MenuList(
     onSubtitleBackgroundOpacityChange: (Float) -> Unit,
     onSubtitleBottomPadding: (Dp) -> Unit,
     onPlayModeChange: (PlayMode) -> Unit,
+    onShowDebugInfoChange: (Boolean) -> Unit,
     onFocusStateChange: (MenuFocusState) -> Unit
 ) {
     Box(
@@ -262,6 +268,15 @@ private fun MenuList(
             VideoPlayerMenuNavItem.Others -> {
                 OthersMenuList(
                     onPlayModeChange = onPlayModeChange,
+                    onFocusStateChange = onFocusStateChange
+                )
+            }
+
+            VideoPlayerMenuNavItem.Debug -> {
+                val videoPlayerConfigData = LocalVideoPlayerConfigData.current
+                DebugMenuList(
+                    currentShowDebugInfo = videoPlayerConfigData.currentShowDebugInfo,
+                    onShowDebugInfoChange = onShowDebugInfoChange,
                     onFocusStateChange = onFocusStateChange
                 )
             }
@@ -371,7 +386,8 @@ fun MenuControllerPreview() {
                         currentSubtitleBackgroundOpacity = currentSubtitleBackgroundOpacity,
                         currentSubtitleBottomPadding = currentSubtitleBottomPadding,
 
-                        currentPlayMode = currentPlayMode
+                        currentPlayMode = currentPlayMode,
+                        currentShowDebugInfo = false
                     )
                 ) {
                     MenuController(
@@ -401,7 +417,8 @@ fun MenuControllerPreview() {
                             currentSubtitleBackgroundOpacity = it
                         },
                         onSubtitleBottomPadding = { currentSubtitleBottomPadding = it },
-                        onPlayModeChange = { currentPlayMode = it }
+                        onPlayModeChange = { currentPlayMode = it },
+                        onShowDebugInfoChange = { }
                     )
                 }
             }
