@@ -52,6 +52,7 @@ android {
     }
 
     flavorDimensions.add("channel")
+    flavorDimensions.add("platform")
 
     productFlavors {
         create("lite") {
@@ -59,6 +60,15 @@ android {
         }
         create("default") {
             dimension = "channel"
+        }
+        create("mobile") {
+            dimension = "platform"
+            applicationIdSuffix = ".mobile"
+            versionNameSuffix = "-mobile"
+        }
+        create("tv") {
+            dimension = "platform"
+            // No suffix - keeps the original app ID
         }
     }
 
@@ -169,8 +179,6 @@ java {
 }
 
 dependencies {
-    implementation(project(":app:mobile"))
-    implementation(project(":app:tv"))
 }
 
 tasks.withType<Test> {
