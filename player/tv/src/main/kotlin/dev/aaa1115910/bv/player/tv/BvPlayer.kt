@@ -100,7 +100,8 @@ fun BvPlayer(
     onSubtitleSizeChange: (TextUnit) -> Unit,
     onSubtitleBackgroundOpacityChange: (Float) -> Unit,
     onSubtitleBottomPadding: (Dp) -> Unit,
-    onPlayModeChange: (PlayMode) -> Unit
+    onPlayModeChange: (PlayMode) -> Unit,
+    onShowDebugInfoChange: (Boolean) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val logger = KotlinLogging.logger("BvPlayer")
@@ -633,6 +634,10 @@ fun BvPlayer(
             onPlayModeChange = { playMode ->
                 logger.info { "On play mode change: $playMode" }
                 onPlayModeChange(playMode)
+            },
+            onShowDebugInfoChange = { enabled ->
+                logger.info { "On show debug info change: $enabled" }
+                onShowDebugInfoChange(enabled)
             },
             onRequestFocus = { focusRequester.requestFocus() },
         ) {

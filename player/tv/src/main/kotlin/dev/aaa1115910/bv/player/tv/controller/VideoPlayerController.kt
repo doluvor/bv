@@ -81,6 +81,7 @@ fun VideoPlayerController(
     onSubtitleBackgroundOpacityChange: (Float) -> Unit,
     onSubtitleBottomPadding: (Dp) -> Unit,
     onPlayModeChange: (PlayMode) -> Unit,
+    onShowDebugInfoChange: (Boolean) -> Unit,
 
     onRequestFocus: () -> Unit,
     content: @Composable BoxScope.() -> Unit
@@ -363,7 +364,8 @@ fun VideoPlayerController(
             onSubtitleSizeChange = onSubtitleSizeChange,
             onSubtitleBackgroundOpacityChange = onSubtitleBackgroundOpacityChange,
             onSubtitleBottomPadding = onSubtitleBottomPadding,
-            onPlayModeChange = onPlayModeChange
+            onPlayModeChange = onPlayModeChange,
+            onShowDebugInfoChange = onShowDebugInfoChange
         )
     }
 }
