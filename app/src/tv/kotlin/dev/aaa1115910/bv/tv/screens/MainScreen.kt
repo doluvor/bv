@@ -42,6 +42,7 @@ import dev.aaa1115910.bv.tv.activities.user.ToViewActivity
 import dev.aaa1115910.bv.tv.activities.user.UserInfoActivity
 import dev.aaa1115910.bv.tv.screens.main.DrawerContent
 import dev.aaa1115910.bv.tv.screens.main.DrawerItem
+import dev.aaa1115910.bv.tv.screens.main.FavoriteContent
 import dev.aaa1115910.bv.tv.screens.main.HistoryContent
 import dev.aaa1115910.bv.tv.screens.main.HomeContent
 import dev.aaa1115910.bv.tv.screens.main.PgcContent
@@ -54,6 +55,7 @@ import dev.aaa1115910.bv.viewmodel.UserViewModel
 import dev.aaa1115910.bv.viewmodel.home.DynamicViewModel
 import dev.aaa1115910.bv.viewmodel.home.PopularViewModel
 import dev.aaa1115910.bv.viewmodel.home.RecommendViewModel
+import dev.aaa1115910.bv.viewmodel.user.FavoriteViewModel
 import dev.aaa1115910.bv.viewmodel.user.HistoryViewModel
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.androidx.compose.koinViewModel
@@ -65,7 +67,8 @@ fun MainScreen(
     popularViewModel: PopularViewModel = koinViewModel(),
     dynamicViewModel: DynamicViewModel = koinViewModel(),
     userViewModel: UserViewModel = koinViewModel(),
-    historyViewModel: HistoryViewModel = koinViewModel()
+    historyViewModel: HistoryViewModel = koinViewModel(),
+    favoriteViewModel: FavoriteViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     val logger = KotlinLogging.logger("MainScreen")
@@ -76,6 +79,7 @@ fun MainScreen(
 
     val mainFocusRequester = remember { FocusRequester() }
     val historyFocusRequester = remember { FocusRequester() }
+    val favoriteFocusRequester = remember { FocusRequester() }
     val ugcFocusRequester = remember { FocusRequester() }
     val pgcFocusRequester = remember { FocusRequester() }
     val searchFocusRequester = remember { FocusRequester() }
@@ -95,6 +99,7 @@ fun MainScreen(
         when (selectedDrawerItem) {
             DrawerItem.Home -> mainFocusRequester.requestFocus()
             DrawerItem.History -> historyFocusRequester.requestFocus()
+            DrawerItem.Favorite -> favoriteFocusRequester.requestFocus()
             DrawerItem.UGC -> ugcFocusRequester.requestFocus()
             DrawerItem.PGC -> pgcFocusRequester.requestFocus()
             DrawerItem.Search -> searchFocusRequester.requestFocus()
@@ -158,6 +163,7 @@ fun MainScreen(
                 when (screen) {
                     DrawerItem.Home -> HomeContent(navFocusRequester = mainFocusRequester)
                     DrawerItem.History -> HistoryContent(navFocusRequester = historyFocusRequester, historyViewModel = historyViewModel)
+                    DrawerItem.Favorite -> FavoriteContent(navFocusRequester = favoriteFocusRequester, favoriteViewModel = favoriteViewModel)
                     DrawerItem.UGC -> UgcContent(navFocusRequester = ugcFocusRequester)
                     DrawerItem.PGC -> PgcContent(navFocusRequester = pgcFocusRequester)
                     DrawerItem.Search -> SearchInputScreen(defaultFocusRequester = searchFocusRequester)
