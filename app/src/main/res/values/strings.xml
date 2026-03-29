@@ -652,6 +652,7 @@
     <string name="user_homepage_favorite">私人藏品</string>
     <string name="user_homepage_follow">已关注</string>
     <string name="user_homepage_recent">最近播放记录</string>
+    <string name="drawer_item_favorite">收藏</string>
     <string name="user_homepage_user_switch">账户管理</string>
     <string name="user_info_Incognito_mode_off">未开启</string>
     <string name="user_info_Incognito_mode_on">已开启</string>
