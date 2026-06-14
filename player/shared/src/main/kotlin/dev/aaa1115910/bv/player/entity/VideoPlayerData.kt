@@ -59,6 +59,7 @@ data class VideoPlayerStateData(
     val isBuffering: Boolean = false,
     val isError: Boolean = false,
     val exception: Exception? = null,
+    val fullError: Exception? = null,
     val showBackToHistory: Boolean = false,
 )
 

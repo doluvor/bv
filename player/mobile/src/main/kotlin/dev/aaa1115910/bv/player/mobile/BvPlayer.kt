@@ -96,6 +96,7 @@ fun BvPlayer(
     var isError by remember { mutableStateOf(false) }
     var isBuffering by remember { mutableStateOf(false) }
     var exception by remember { mutableStateOf<Exception?>(null) }
+    var fullError by remember { mutableStateOf<Exception?>(null) }
 
     val typeFilter by remember { mutableStateOf(TypeFilter()) }
     var danmakuConfig by remember { mutableStateOf(DanmakuConfig()) }
@@ -198,12 +199,14 @@ fun BvPlayer(
             println("onError: $error")
             isError = true
             exception = error.cause as Exception?
+            fullError = error
         }
 
         override fun onReady() {
             logger.info { "onReady" }
             isError = false
             exception = null
+            fullError = null
             initDanmakuConfig()
 
             updateVideoAspectRatio()
@@ -305,6 +308,7 @@ fun BvPlayer(
             isBuffering = isBuffering,
             isError = isError,
             exception = exception,
+            fullError = fullError,
             showBackToHistory = showBackToHistory
         ),
         LocalVideoPlayerDebugInfoData provides VideoPlayerDebugInfoData(

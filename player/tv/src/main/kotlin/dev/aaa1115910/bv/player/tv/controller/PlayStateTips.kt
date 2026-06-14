@@ -5,7 +5,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -70,7 +74,8 @@ fun PlayStateTips(
         if (videoPlayerStateData.isError) {
             PlayErrorTip(
                 modifier = Modifier.align(Alignment.Center),
-                exception = videoPlayerStateData.exception!!
+                exception = videoPlayerStateData.exception!!,
+                fullError = videoPlayerStateData.fullError
             )
         }
         if (videoPlayerPaymentData.needPay) {
@@ -118,7 +123,8 @@ fun BufferingTip(
 @Composable
 fun PlayErrorTip(
     modifier: Modifier = Modifier,
-    exception: Exception
+    exception: Exception,
+    fullError: Exception? = null
 ) {
     Surface(
         modifier = modifier,
@@ -127,17 +133,67 @@ fun PlayErrorTip(
         ),
         shape = MaterialTheme.shapes.medium
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier.padding(16.dp, 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "播放器正在抽风",
-                style = MaterialTheme.typography.titleLarge
-            )
-            Text(text = " _(:з」∠)_")
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(text = "错误信息：${exception.message}")
+            // Title and icon
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "播放器正在抽风",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(text = " _(:з」∠)_")
+                }
+            }
+
+            // Main error message
+            item {
+                Text(
+                    text = "错误信息：${exception.message}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            // Show cause if available
+            exception.cause?.let { cause ->
+                item {
+                    Text(
+                        text = "原因：${cause.message}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
+            }
+
+            // Show full error details if available
+            fullError?.let { error ->
+                item {
+                    Text(
+                        text = "错误类型：${error.javaClass.simpleName}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.6f)
+                    )
+                }
+
+                // Show stack trace elements (first few lines)
+                if (error.stackTrace.isNotEmpty()) {
+                    item {
+                        val stackPreview = error.stackTrace
+                            .take(3)
+                            .joinToString("\n") { "    at $it" }
+                        Text(
+                            text = "调用栈预览：\n$stackPreview",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -222,7 +278,8 @@ private fun PlayErrorTipPreview() {
     MaterialTheme(
         colorScheme = darkColorScheme()
     ) {
-        PlayErrorTip(exception = Exception("This is a test exception."))
+        val testException = Exception("This is a test exception.")
+        PlayErrorTip(exception = testException, fullError = testException)
     }
 }
 
