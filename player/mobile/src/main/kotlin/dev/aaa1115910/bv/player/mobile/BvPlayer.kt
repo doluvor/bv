@@ -97,6 +97,7 @@ fun BvPlayer(
     var isBuffering by remember { mutableStateOf(false) }
     var exception by remember { mutableStateOf<Exception?>(null) }
     var fullError by remember { mutableStateOf<Exception?>(null) }
+    var diagnosticInfo by remember { mutableStateOf("") }
 
     val typeFilter by remember { mutableStateOf(TypeFilter()) }
     var danmakuConfig by remember { mutableStateOf(DanmakuConfig()) }
@@ -200,6 +201,7 @@ fun BvPlayer(
             isError = true
             exception = error.cause as Exception?
             fullError = error
+            diagnosticInfo = videoPlayer.errorDiagnostics
         }
 
         override fun onReady() {
@@ -309,6 +311,7 @@ fun BvPlayer(
             isError = isError,
             exception = exception,
             fullError = fullError,
+            diagnosticInfo = diagnosticInfo,
             showBackToHistory = showBackToHistory
         ),
         LocalVideoPlayerDebugInfoData provides VideoPlayerDebugInfoData(

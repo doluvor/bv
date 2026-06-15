@@ -60,6 +60,7 @@ data class VideoPlayerStateData(
     val isError: Boolean = false,
     val exception: Exception? = null,
     val fullError: Exception? = null,
+    val diagnosticInfo: String = "",
     val showBackToHistory: Boolean = false,
 )
 

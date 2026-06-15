@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -30,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Icon
@@ -75,7 +79,8 @@ fun PlayStateTips(
             PlayErrorTip(
                 modifier = Modifier.align(Alignment.Center),
                 exception = videoPlayerStateData.exception!!,
-                fullError = videoPlayerStateData.fullError
+                fullError = videoPlayerStateData.fullError,
+                diagnosticInfo = videoPlayerStateData.diagnosticInfo
             )
         }
         if (videoPlayerPaymentData.needPay) {
@@ -124,7 +129,8 @@ fun BufferingTip(
 fun PlayErrorTip(
     modifier: Modifier = Modifier,
     exception: Exception,
-    fullError: Exception? = null
+    fullError: Exception? = null,
+    diagnosticInfo: String = ""
 ) {
     Surface(
         modifier = modifier,
@@ -192,6 +198,28 @@ fun PlayErrorTip(
                             color = Color.White.copy(alpha = 0.5f)
                         )
                     }
+                }
+            }
+
+            // Diagnostic trail: snapshot + precursor events (seeks/codec/network).
+            if (diagnosticInfo.isNotBlank()) {
+                item {
+                    Text(
+                        text = "诊断轨迹：",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                }
+                item {
+                    Text(
+                        text = diagnosticInfo,
+                        modifier = Modifier
+                            .heightIn(max = 320.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = Color.White.copy(alpha = 0.55f)
+                    )
                 }
             }
         }

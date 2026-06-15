@@ -61,6 +61,13 @@ abstract class AbstractVideoPlayer {
     /** 调试信息 */
     abstract val debugInfo: String
 
+    /**
+     * 最近一次播放错误的诊断快照与事件轨迹。
+     * 仅在发生错误后由播放器后端填充；空字符串表示暂无错误。
+     */
+    open val errorDiagnostics: String
+        get() = ""
+
     /** 视频宽度 */
     abstract val videoWidth: Int
 
