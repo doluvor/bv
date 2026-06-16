@@ -43,6 +43,7 @@ import dev.aaa1115910.bv.tv.activities.user.UserInfoActivity
 import dev.aaa1115910.bv.tv.screens.main.DrawerContent
 import dev.aaa1115910.bv.tv.screens.main.DrawerItem
 import dev.aaa1115910.bv.tv.screens.main.FavoriteContent
+import dev.aaa1115910.bv.tv.screens.main.FollowingContent
 import dev.aaa1115910.bv.tv.screens.main.HistoryContent
 import dev.aaa1115910.bv.tv.screens.main.HomeContent
 import dev.aaa1115910.bv.tv.screens.main.PgcContent
@@ -80,6 +81,7 @@ fun MainScreen(
     val mainFocusRequester = remember { FocusRequester() }
     val historyFocusRequester = remember { FocusRequester() }
     val favoriteFocusRequester = remember { FocusRequester() }
+    val followingFocusRequester = remember { FocusRequester() }
     val ugcFocusRequester = remember { FocusRequester() }
     val pgcFocusRequester = remember { FocusRequester() }
     val searchFocusRequester = remember { FocusRequester() }
@@ -100,6 +102,7 @@ fun MainScreen(
             DrawerItem.Home -> mainFocusRequester.requestFocus()
             DrawerItem.History -> historyFocusRequester.requestFocus()
             DrawerItem.Favorite -> favoriteFocusRequester.requestFocus()
+            DrawerItem.Following -> followingFocusRequester.requestFocus()
             DrawerItem.UGC -> ugcFocusRequester.requestFocus()
             DrawerItem.PGC -> pgcFocusRequester.requestFocus()
             DrawerItem.Search -> searchFocusRequester.requestFocus()
@@ -164,6 +167,7 @@ fun MainScreen(
                     DrawerItem.Home -> HomeContent(navFocusRequester = mainFocusRequester)
                     DrawerItem.History -> HistoryContent(navFocusRequester = historyFocusRequester, historyViewModel = historyViewModel)
                     DrawerItem.Favorite -> FavoriteContent(navFocusRequester = favoriteFocusRequester, favoriteViewModel = favoriteViewModel)
+                    DrawerItem.Following -> FollowingContent(navFocusRequester = followingFocusRequester)
                     DrawerItem.UGC -> UgcContent(navFocusRequester = ugcFocusRequester)
                     DrawerItem.PGC -> PgcContent(navFocusRequester = pgcFocusRequester)
                     DrawerItem.Search -> SearchInputScreen(defaultFocusRequester = searchFocusRequester)

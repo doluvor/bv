@@ -42,6 +42,17 @@ class UserSpaceViewModel(
         }
     }
 
+    //切换到指定UP时重置分页与列表后重新加载，供关注列表的 master-detail 使用
+    fun loadUser(mid: Long, name: String = "") {
+        upMid = mid
+        upName = name
+        tvSpaceVideos.clear()
+        spaceVideos.clear()
+        page = SpaceVideoPage()
+        updating = false
+        update()
+    }
+
     private suspend fun updateSpaceVideos() {
         if (updating || noMore) return
         logger.fInfo { "Updating up [mid=$upMid] space videos from page $page" }
