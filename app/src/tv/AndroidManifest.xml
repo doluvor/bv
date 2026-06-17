@@ -47,6 +47,12 @@
             android:label="@string/title_activity_video_player_v3"
             android:theme="@style/Theme.BV.TV" />
         <activity
+            android:name="dev.aaa1115910.bv.tv.activities.live.LivePlayerActivity"
+            android:enableOnBackInvokedCallback="false"
+            android:exported="false"
+            android:label="@string/title_activity_video_player_v3"
+            android:theme="@style/Theme.BV.TV" />
+        <activity
             android:name="dev.aaa1115910.bv.tv.activities.video.TagActivity"
             android:enableOnBackInvokedCallback="false"
             android:exported="false"

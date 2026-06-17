@@ -38,7 +38,7 @@ import androidx.tv.material3.Text
 import dev.aaa1115910.bv.util.OnBottomReached
 import dev.aaa1115910.bv.util.isDpadLeft
 import dev.aaa1115910.bv.util.isKeyDown
-import dev.aaa1115910.bv.util.toast
+import dev.aaa1115910.bv.tv.activities.live.LivePlayerActivity
 import dev.aaa1115910.bv.viewmodel.live.LiveViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -179,8 +179,12 @@ fun LiveContent(
                             room = room,
                             onFocus = { gridIndex = index },
                             onClick = {
-                                //Phase 3: LivePlayerActivity.actionStart(context, room.roomId, room.title, room.uname)
-                                "即将支持直播播放".toast(context)
+                                LivePlayerActivity.actionStart(
+                                    context = context,
+                                    roomId = room.roomId,
+                                    title = room.title,
+                                    uname = room.uname
+                                )
                             }
                         )
                     }
