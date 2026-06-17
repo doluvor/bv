@@ -39,9 +39,15 @@ class LivePlayerViewModel(
     var videoPlayer: AbstractVideoPlayer? = null
 
     /**
-     * akdanmaku 弹幕引擎实例。由本 VM 拥有（与 [dev.aaa1115910.bv.viewmodel.VideoPlayerV3ViewModel]
-     * 的点播路径一致：VM 构造 `DanmakuPlayer(SimpleRenderer())`，Screen 通过 [AkDanmakuPlayer]
-     * 绑定 [com.kuaishou.akdanmaku.ui.DanmakuView]，本 VM 负责在 onCleared 中 release）。
+     * akdanmaku 弹幕引擎实例（Compose 包装 [AkDanmakuPlayer]，底层为 Kuaishou 的
+     * [com.kuaishou.akdanmaku.ui.DanmakuView]，用于渲染直播弹幕覆盖层）。实例由本 VM 拥有：
+     * 通过 `DanmakuPlayer(SimpleRenderer())` 构造，并在 [onCleared] 中 release。
+     *
+     * 注意：点播路径（[dev.aaa1115910.bv.viewmodel.VideoPlayerV3ViewModel] + 各端 BvPlayer）
+     * 采用相同的引擎所有权与渲染方式，本类在此与其保持一致。
+     *
+     * 弹幕开关的显隐由 Screen 以 alpha 控制——切勿让 [AkDanmakuPlayer] 因开关而离开组合，
+     * 否则其 DisposableEffect 的 onDispose 会 release 本实例，导致再次开启时引擎无法重启。
      */
     var danmakuPlayer: DanmakuPlayer? by mutableStateOf(null)
         private set

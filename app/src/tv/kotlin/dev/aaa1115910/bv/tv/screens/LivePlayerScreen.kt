@@ -20,6 +20,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -63,6 +64,13 @@ fun LivePlayerScreen(viewModel: LivePlayerViewModel) {
     LaunchedEffect(Unit) {
         runCatching { viewModel.initDanmakuPlayer() }
             .onFailure { logger.fInfo { "init danmaku player failed: ${it.message}" } }
+    }
+
+    // 播放就绪后将焦点落到弹幕开关上，便于遥控器直接操作。
+    LaunchedEffect(viewModel.loadState) {
+        if (viewModel.loadState == LiveLoadState.Playing) {
+            runCatching { toggleFocusRequester.requestFocus() }
+        }
     }
 
     val playerListener = remember(viewModel) {
@@ -115,13 +123,14 @@ fun LivePlayerScreen(viewModel: LivePlayerViewModel) {
             )
         }
 
-        // 弹幕覆盖层：仅在开启时渲染。位于画面之上、加载/状态覆盖层之下。
-        if (danmakuEnabled) {
-            AkDanmakuPlayer(
-                modifier = Modifier.fillMaxSize(),
-                danmakuPlayer = viewModel.danmakuPlayer
-            )
-        }
+        // 弹幕覆盖层：始终保留在组合中（避免 onDispose 释放 VM 持有的 DanmakuPlayer），
+        // 关闭时仅以 alpha(0f) 隐藏，不影响 WebSocket 订阅。位于画面之上、状态覆盖层之下。
+        AkDanmakuPlayer(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(if (danmakuEnabled) 1f else 0f),
+            danmakuPlayer = viewModel.danmakuPlayer
+        )
 
         when (viewModel.loadState) {
             LiveLoadState.Loading -> CenterHint("加载中…")
