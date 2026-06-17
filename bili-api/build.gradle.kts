@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":bili-api:grpc"))
     implementation(libs.koin.core)
     implementation(libs.koin.annotations)
+    implementation(libs.brotli)
     implementation(libs.jsoup)
     implementation(libs.kotlinx.coroutines)
     implementation(libs.kotlinx.serialization)

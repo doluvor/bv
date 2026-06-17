@@ -6,6 +6,7 @@ import dev.aaa1115910.biliapi.http.entity.live.FrameHeader
 import dev.aaa1115910.biliapi.http.entity.live.LiveEvent
 import dev.aaa1115910.biliapi.http.entity.live.readFrameHeader
 import dev.aaa1115910.biliapi.http.plugins.BiliUserAgent
+import dev.aaa1115910.biliapi.http.util.brotliDecompress
 import dev.aaa1115910.biliapi.http.util.zlibDecompress
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -161,8 +162,8 @@ object LiveDataWebSocket {
 
                     //普通包正文使用brotli压缩,解压为一个带头部的协议0普通包
                     3 -> {
-                        logger.warn { "todo package version: ${head.version}" }
-                        bytePack.readByteArray()
+                        val decompress = bytePack.readByteArray().brotliDecompress()
+                        result += handleLiveEventBodyDecompress(decompress)
                     }
 
                     else -> {
