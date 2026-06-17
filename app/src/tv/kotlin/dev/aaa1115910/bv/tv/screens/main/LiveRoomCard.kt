@@ -1,7 +1,9 @@
 package dev.aaa1115910.bv.tv.screens.main
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -111,9 +113,11 @@ private fun LiveCover(
         contentAlignment = Alignment.BottomCenter
     ) {
         width = maxWidth
-        val shadowAlpha by remember(online, areaName) {
-            derivedStateOf { if (showInfo) 0.8f else 0f }
-        }
+        val shadowAlpha by animateFloatAsState(
+            targetValue = if (showInfo) 0.8f else 0f,
+            animationSpec = tween(durationMillis = 300),
+            label = "shadow alpha"
+        )
 
         AsyncImage(
             modifier = Modifier
