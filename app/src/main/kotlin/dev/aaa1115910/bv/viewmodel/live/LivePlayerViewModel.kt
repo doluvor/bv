@@ -43,7 +43,7 @@ class LivePlayerViewModel(
      * 的点播路径一致：VM 构造 `DanmakuPlayer(SimpleRenderer())`，Screen 通过 [AkDanmakuPlayer]
      * 绑定 [com.kuaishou.akdanmaku.ui.DanmakuView]，本 VM 负责在 onCleared 中 release）。
      */
-    var danmakuPlayer: DanmakuPlayer? = null
+    var danmakuPlayer: DanmakuPlayer? by mutableStateOf(null)
         private set
 
     /**
@@ -117,9 +117,9 @@ class LivePlayerViewModel(
      */
     fun startDanmaku(scope: CoroutineScope) {
         danmakuJob?.cancel()
-        danmakuConnected = true
         val roomId = this.roomId
         if (roomId <= 0) return
+        danmakuConnected = true
         // 启动弹幕引擎的帧循环（镜像点播 onPlay -> start）。此时 AkDanmakuPlayer 的
         // LaunchedEffect 已完成 bindView（onPlay 来自视频播放器，晚于首次组合）。
         runCatching { danmakuPlayer?.start() }
@@ -155,7 +155,8 @@ class LivePlayerViewModel(
             textColor = Color.White.toArgb()
         )
         runCatching {
-            // send 内部会 post 到 action 线程；无需切 Main。
+            // send() runs inline on the caller thread; safe to call from the WebSocket IO callback
+            // because DanmakuPlayer's internal DataSystem.addItem is synchronized.
             player.send(data)
         }.onFailure {
             logger.fError { "send live danmaku failed: ${it.message}" }
