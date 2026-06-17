@@ -16,8 +16,8 @@ class LivePlayUrlResolverTest {
     private val host = "https://h.test"
 
     /** codec with one url_info entry; resolved URL == host + baseUrl (+ extra). */
-    private fun codec(qn: Int, baseUrl: String, extra: String = "") = LiveStreamCodec(
-        codecName = "avc",
+    private fun codec(qn: Int, baseUrl: String, name: String = "avc", extra: String = "") = LiveStreamCodec(
+        codecName = name,
         currentQn = qn,
         baseUrl = baseUrl,
         urlInfo = listOf(LiveStreamUrlInfo(host = host, extra = extra))
@@ -73,6 +73,33 @@ class LivePlayUrlResolverTest {
         )
         assertEquals("$host/10k.m3u8", LivePlayUrlResolver.resolve(data)?.url)
         assertEquals(10000, LivePlayUrlResolver.resolve(data)?.qn)
+    }
+
+    @Test
+    fun `prefers avc over higher-qn hevc`() {
+        // 模拟器/部分电视盒子没有 HEVC 解码器：即使 HEVC 的 qn 更高，也应选 AVC。
+        val data = data(
+            "http_hls",
+            "ts" to listOf(
+                codec(qn = 10000, baseUrl = "/hevc.m3u8", name = "hevc"),
+                codec(qn = 400, baseUrl = "/avc.m3u8", name = "avc")
+            )
+        )
+        val resolved = LivePlayUrlResolver.resolve(data)
+        assertEquals("$host/avc.m3u8", resolved?.url)
+        assertEquals(400, resolved?.qn)
+    }
+
+    @Test
+    fun `falls back to highest qn when no avc`() {
+        val data = data(
+            "http_hls",
+            "ts" to listOf(
+                codec(qn = 400, baseUrl = "/hevc400.m3u8", name = "hevc"),
+                codec(qn = 10000, baseUrl = "/hevc10k.m3u8", name = "hevc")
+            )
+        )
+        assertEquals("$host/hevc10k.m3u8", LivePlayUrlResolver.resolve(data)?.url)
     }
 
     @Test
