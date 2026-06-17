@@ -3,9 +3,9 @@ package dev.aaa1115910.biliapi.http
 import dev.aaa1115910.biliapi.http.entity.BiliResponse
 import dev.aaa1115910.biliapi.http.entity.live.DanmuInfoData
 import dev.aaa1115910.biliapi.http.entity.live.HistoryDanmaku
-import dev.aaa1115910.biliapi.http.entity.live.LiveAreaListData
+import dev.aaa1115910.biliapi.http.entity.live.LiveParentArea
 import dev.aaa1115910.biliapi.http.entity.live.LivePlayUrlV2Data
-import dev.aaa1115910.biliapi.http.entity.live.LiveRoomListData
+import dev.aaa1115910.biliapi.http.entity.live.LiveRoomInfo
 import dev.aaa1115910.biliapi.http.entity.live.RoomPlayInfoData
 import dev.aaa1115910.biliapi.http.plugins.BiliUserAgent
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -78,21 +78,21 @@ object BiliLiveHttpApi {
             parameter("roomid", roomId)
         }.body()
 
-    /** 直播首页：分区树 + 推荐直播间 */
-    suspend fun getLiveAreaList(sessData: String = ""): BiliResponse<LiveAreaListData> =
-        client.get("/xlive/web-interface/v1/index/getList") {
+    /** 直播分区目录（经典接口 room/v1/Area/getList，无需登录） */
+    suspend fun getLiveAreaList(sessData: String = ""): BiliResponse<List<LiveParentArea>> =
+        client.get("/room/v1/Area/getList") {
             if (sessData.isNotEmpty()) header("Cookie", "SESSDATA=$sessData;")
         }.body()
 
-    /** 某子分区的直播间列表（分页） */
+    /** 某子分区的直播间列表（分页，经典接口 room/v1/Area/getRoomList，无需登录） */
     suspend fun getLiveRoomList(
-        parentAreaId: Int,
-        areaId: Int,
+        parentAreaId: String,
+        areaId: String,
         page: Int,
         pageSize: Int = 30,
         sessData: String = ""
-    ): BiliResponse<LiveRoomListData> =
-        client.get("/xlive/web-interface/v1/second/getList") {
+    ): BiliResponse<List<LiveRoomInfo>> =
+        client.get("/room/v1/Area/getRoomList") {
             parameter("parent_area_id", parentAreaId)
             parameter("area_id", areaId)
             parameter("page", page)

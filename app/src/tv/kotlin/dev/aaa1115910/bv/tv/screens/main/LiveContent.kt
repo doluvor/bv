@@ -35,6 +35,7 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.FilterChip
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import dev.aaa1115910.biliapi.http.entity.live.LiveArea
 import dev.aaa1115910.bv.util.OnBottomReached
 import dev.aaa1115910.bv.util.isDpadLeft
 import dev.aaa1115910.bv.util.isKeyDown
@@ -44,11 +45,11 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 /**
- * 直播发现页：左侧分区目录（热门推荐 + 各父分区下的子分区），
+ * 直播发现页：左侧分区目录（各父分区下的子分区），
  * 右侧直播间网格。布局与 D-pad 焦点交互沿用 [FollowingContent] 的约定。
  *
- * 选中分区调用 [LiveViewModel.selectRecommended] / [LiveViewModel.selectArea]，
- * 列表触底调用 [LiveViewModel.loadMore]。
+ * 进入后 [LiveViewModel.loadHome] 加载分区并自动选中第一个子分区；
+ * 选中分区调用 [LiveViewModel.selectArea]，列表触底调用 [LiveViewModel.loadMore]。
  */
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -62,14 +63,19 @@ fun LiveContent(
     var gridIndex by remember { mutableIntStateOf(0) }
     val gridState = rememberLazyGridState()
 
-    //首次进入加载分区目录与推荐直播间
+    //目录中第一个子分区，作为默认焦点锚点（loadHome 会自动选中它）。
+    val firstArea: LiveArea? = remember(liveViewModel.parentAreas) {
+        liveViewModel.parentAreas.firstNotNullOfOrNull { it.list.firstOrNull() }
+    }
+
+    //首次进入加载分区目录与第一个子分区的直播间
     LaunchedEffect(Unit) {
         if (liveViewModel.parentAreas.isEmpty()) liveViewModel.loadHome()
     }
 
-    //右侧网格触底自动加载更多
+    //右侧网格触底自动加载更多；列表为空时不触发，避免失败时无限重试 + toast 刷屏。
     gridState.OnBottomReached(loading = liveViewModel.loading) {
-        scope.launch { liveViewModel.loadMore() }
+        if (liveViewModel.rooms.isNotEmpty()) scope.launch { liveViewModel.loadMore() }
     }
 
     //从右侧网格按左键回到左侧目录时，把焦点拉回目录选中项
@@ -79,8 +85,7 @@ fun LiveContent(
     }
 
     Row(modifier = Modifier.fillMaxSize()) {
-        //左侧：分区目录。第一项固定为“热门推荐”(selectedArea == null)，
-        //其后依次列出每个 parentArea 下的子分区（带父分区名作为分组标题）。
+        //左侧：分区目录。依次列出每个 parentArea 下的子分区（带父分区名作为分组标题）。
         LazyColumn(
             modifier = Modifier
                 .weight(1.5f)
@@ -89,22 +94,6 @@ fun LiveContent(
             contentPadding = PaddingValues(24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item(key = "recommended") {
-                FilterChip(
-                    modifier = Modifier
-                        .width(200.dp)
-                        .focusRequester(navFocusRequester),
-                    selected = liveViewModel.selectedArea == null,
-                    onClick = {
-                        scope.launch { liveViewModel.selectRecommended() }
-                    }
-                ) {
-                    Text(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        text = "热门推荐"
-                    )
-                }
-            }
             liveViewModel.parentAreas.forEach { parentArea ->
                 item(key = "header-${parentArea.id}") {
                     Text(
@@ -120,11 +109,12 @@ fun LiveContent(
                     items = parentArea.list,
                     key = { area -> "area-${area.id}" }
                 ) { area ->
+                    val isFirst = area.id == firstArea?.id
                     FilterChip(
-                        modifier = Modifier.width(200.dp),
-                        selected =
-                            liveViewModel.selectedArea?.parentArea == parentArea &&
-                            liveViewModel.selectedArea?.area == area,
+                        modifier = Modifier
+                            .width(200.dp)
+                            .then(if (isFirst) Modifier.focusRequester(navFocusRequester) else Modifier),
+                        selected = liveViewModel.selectedArea?.area == area,
                         onClick = {
                             scope.launch { liveViewModel.selectArea(parentArea, area) }
                         }

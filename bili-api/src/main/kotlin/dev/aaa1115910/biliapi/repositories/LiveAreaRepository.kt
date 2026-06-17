@@ -5,11 +5,6 @@ import dev.aaa1115910.biliapi.http.BiliLiveHttpApi
 import dev.aaa1115910.biliapi.http.entity.live.LiveParentArea
 import org.koin.core.annotation.Single
 
-data class LiveAreaHome(
-    val areas: List<LiveParentArea>,
-    val recommendedRooms: List<LiveRoomItem>
-)
-
 data class LiveRoomPage(
     val list: List<LiveRoomItem>,
     val nextPage: Int,
@@ -22,27 +17,23 @@ class LiveAreaRepository(
 ) {
     private val sessData get() = authRepository.sessionData ?: ""
 
-    /** 首页：分区树 + 推荐直播间（同一次 getList 调用） */
-    suspend fun getAreaHome(): LiveAreaHome {
-        val data = BiliLiveHttpApi.getLiveAreaList(sessData).getResponseData()
-        return LiveAreaHome(
-            areas = data.gameList,
-            recommendedRooms = data.liveList.map { LiveRoomItem.fromRoomInfo(it) }
-        )
-    }
+    /** 直播分区目录 */
+    suspend fun getAreas(): List<LiveParentArea> =
+        BiliLiveHttpApi.getLiveAreaList(sessData).getResponseData()
 
-    /** 子分区分页直播间 */
-    suspend fun getRooms(parentAreaId: Int, areaId: Int, page: Int): LiveRoomPage {
-        val data = BiliLiveHttpApi.getLiveRoomList(
+    /** 子分区分页直播间。[parentAreaId]/[areaId] 为经典接口返回的字符串分区 id */
+    suspend fun getRooms(parentAreaId: String, areaId: String, page: Int): LiveRoomPage {
+        val list = BiliLiveHttpApi.getLiveRoomList(
             parentAreaId = parentAreaId,
             areaId = areaId,
             page = page,
             sessData = sessData
         ).getResponseData()
+        // 经典接口无 has_more 字段：不足一页即视为到底。
         return LiveRoomPage(
-            list = data.list.map { LiveRoomItem.fromRoomInfo(it) },
+            list = list.map { LiveRoomItem.fromRoomInfo(it) },
             nextPage = page + 1,
-            noMore = data.hasMore == 0
+            noMore = list.size < 30
         )
     }
 }

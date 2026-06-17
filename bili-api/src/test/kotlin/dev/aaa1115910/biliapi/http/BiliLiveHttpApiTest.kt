@@ -37,21 +37,27 @@ class BiliLiveHttpApiTest {
 
     @Test
     fun `get live area list`() {
-        Assertions.assertDoesNotThrow {
-            runBlocking {
-                val response = BiliLiveHttpApi.getLiveAreaList()
-                println(response)
-            }
+        runBlocking {
+            val response = BiliLiveHttpApi.getLiveAreaList()
+            println(response)
+            Assertions.assertEquals(0, response.code, "area list code: ${response.message}")
+            Assertions.assertTrue(
+                response.data.orEmpty().isNotEmpty(),
+                "area list should not be empty"
+            )
         }
     }
 
     @Test
     fun `get live room list`() {
-        Assertions.assertDoesNotThrow {
-            runBlocking {
-                val response = BiliLiveHttpApi.getLiveRoomList(parentAreaId = 2, areaId = 21, page = 1)
-                println(response)
-            }
+        runBlocking {
+            val response = BiliLiveHttpApi.getLiveRoomList(parentAreaId = "2", areaId = "86", page = 1)
+            println(response)
+            Assertions.assertEquals(0, response.code, "room list code: ${response.message}")
+            Assertions.assertTrue(
+                response.data.orEmpty().isNotEmpty(),
+                "room list should not be empty"
+            )
         }
     }
 

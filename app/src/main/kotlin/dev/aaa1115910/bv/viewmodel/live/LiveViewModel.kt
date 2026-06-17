@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import dev.aaa1115910.biliapi.entity.live.LiveRoomItem
 import dev.aaa1115910.biliapi.http.entity.live.LiveArea
 import dev.aaa1115910.biliapi.http.entity.live.LiveParentArea
-import dev.aaa1115910.biliapi.repositories.LiveAreaHome
 import dev.aaa1115910.biliapi.repositories.LiveAreaRepository
 import dev.aaa1115910.bv.BVApp
 import dev.aaa1115910.bv.util.addAllWithMainContext
@@ -20,7 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.android.annotation.KoinViewModel
 
-/** Selected area. null = 热门推荐 (recommended rooms). */
+/** 选中的分区。loadHome 成功后会自动选中第一个子分区。 */
 data class LiveAreaSelection(val parentArea: LiveParentArea, val area: LiveArea)
 
 @KoinViewModel
@@ -45,19 +44,20 @@ class LiveViewModel(
         logger.fInfo { "init LiveViewModel" }
     }
 
+    /** 加载分区目录，并自动选中第一个子分区以立即展示直播间。 */
     suspend fun loadHome() {
         loading = true
         runCatching {
-            val home: LiveAreaHome = liveAreaRepository.getAreaHome()
+            val areas = liveAreaRepository.getAreas()
             parentAreas.clearWithMain()
-            parentAreas.addAllWithMainContext(home.areas)
-            selectedArea = null
-            rooms.clearWithMain()
-            nextPage = 1
-            noMore = false
-            rooms.addAllWithMainContext(home.recommendedRooms)
+            parentAreas.addAllWithMainContext(areas)
+            val firstParent = areas.firstOrNull { it.list.isNotEmpty() }
+            val firstArea = firstParent?.list?.firstOrNull()
+            if (firstParent != null && firstArea != null) {
+                selectArea(firstParent, firstArea)
+            }
         }.onFailure {
-            logger.fError { "Load live home failed: ${it.stackTraceToString()}" }
+            logger.fError { "Load live areas failed: ${it.stackTraceToString()}" }
             withContext(Dispatchers.Main) {
                 "加载直播间失败: ${it.localizedMessage}".toast(BVApp.context)
             }
@@ -74,44 +74,27 @@ class LiveViewModel(
         loadMoreInternal()
     }
 
-    suspend fun selectRecommended() {
-        selectedArea = null
-        refreshing = true
-        loadHome()
-    }
-
     suspend fun loadMore() {
         if (loading || noMore) return
         loadMoreInternal()
     }
 
     private suspend fun loadMoreInternal() {
-        val startSelection = selectedArea
+        val startSelection = selectedArea ?: return
         loading = true
         runCatching {
-            val selection = selectedArea
-            if (selection == null) {
-                // recommended list is not paged in v1; just re-fetch home
-                val home = liveAreaRepository.getAreaHome()
-                // Stale in-flight fetch: user switched away from recommended.
-                if (selectedArea != startSelection) return@runCatching
-                rooms.clearWithMain()
-                rooms.addAllWithMainContext(home.recommendedRooms)
-                noMore = true
-            } else {
-                val page = liveAreaRepository.getRooms(
-                    parentAreaId = selection.parentArea.id,
-                    areaId = selection.area.id,
-                    page = nextPage
-                )
-                // Stale in-flight fetch: user switched to a different area.
-                if (selectedArea != startSelection) return@runCatching
-                if (page.list.isNotEmpty()) {
-                    nextPage = page.nextPage
-                    rooms.addAllWithMainContext(page.list)
-                }
-                noMore = page.noMore
+            val page = liveAreaRepository.getRooms(
+                parentAreaId = startSelection.area.parentId,
+                areaId = startSelection.area.id,
+                page = nextPage
+            )
+            // 切换分区时丢弃过期请求的结果。
+            if (selectedArea != startSelection) return@runCatching
+            if (page.list.isNotEmpty()) {
+                nextPage = page.nextPage
+                rooms.addAllWithMainContext(page.list)
             }
+            noMore = page.noMore
         }.onFailure {
             logger.fError { "Load more live rooms failed: ${it.stackTraceToString()}" }
             withContext(Dispatchers.Main) {
