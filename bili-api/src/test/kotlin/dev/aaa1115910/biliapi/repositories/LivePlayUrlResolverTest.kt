@@ -55,6 +55,21 @@ class LivePlayUrlResolverTest {
     }
 
     @Test
+    fun `falls back to fmp4 when ts absent`() {
+        val data = LivePlayUrlV2Data(
+            playurlInfo = PlayurlInfo(playurl = Playurl(stream = listOf(
+                LiveStream(protocolName = "http_hls", format = listOf(
+                    LiveStreamFormat(formatName = "fmp4",
+                        codec = listOf(LiveStreamCodec(currentQn = 10000, url = listOf("https://hls/fmp4.m3u8"))))
+                ))
+            )))
+        )
+        val resolved = LivePlayUrlResolver.resolve(data)
+        assertEquals("https://hls/fmp4.m3u8", resolved?.url)
+        assertEquals("fmp4", resolved?.formatName)
+    }
+
+    @Test
     fun `picks highest current_qn`() {
         val data = LivePlayUrlV2Data(
             playurlInfo = PlayurlInfo(playurl = Playurl(stream = listOf(
