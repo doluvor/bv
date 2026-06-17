@@ -63,7 +63,12 @@ fun LiveRoomCard(
         label = "live info offset y"
     )
 
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier.onFocusChanged {
+            hasFocus = it.isFocused
+            if (hasFocus) onFocus()
+        }
+    ) {
         Card(
             onClick = { onClick(room) },
             colors = CardDefaults.colors(
@@ -82,11 +87,7 @@ fun LiveRoomCard(
             LiveCover(
                 cover = room.cover,
                 online = room.online,
-                areaName = room.areaName,
-                modifier = Modifier.onFocusChanged {
-                    hasFocus = it.isFocused
-                    if (hasFocus) onFocus()
-                }
+                areaName = room.areaName
             )
         }
 
