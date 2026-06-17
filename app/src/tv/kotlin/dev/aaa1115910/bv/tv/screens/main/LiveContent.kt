@@ -54,6 +54,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun LiveContent(
     navFocusRequester: FocusRequester,
+    drawerSelectedRequester: FocusRequester,
     liveViewModel: LiveViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
@@ -84,7 +85,14 @@ fun LiveContent(
             modifier = Modifier
                 .weight(1.5f)
                 .fillMaxHeight()
-                .onFocusChanged { focusInList = it.hasFocus },
+                .onFocusChanged { focusInList = it.hasFocus }
+                .onPreviewKeyEvent { e ->
+                    //从分区目录按左键，焦点回到侧边栏当前选中的 tab（而非顶部的“User”）。
+                    if (e.isDpadLeft() && e.isKeyDown()) {
+                        runCatching { drawerSelectedRequester.requestFocus() }
+                        true
+                    } else false
+                },
             contentPadding = PaddingValues(24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {

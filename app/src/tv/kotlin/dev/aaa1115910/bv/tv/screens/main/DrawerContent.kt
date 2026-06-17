@@ -64,7 +64,8 @@ fun NavigationDrawerScope.DrawerContent(
     onOpenSettings: () -> Unit = {},
     onShowUserPanel: () -> Unit = {},
     onFocusToContent: () -> Unit = {},
-    onLogin: () -> Unit = {}
+    onLogin: () -> Unit = {},
+    drawerSelectedRequester: FocusRequester = FocusRequester()
 ) {
     var selectedItem by remember { mutableStateOf(DrawerItem.Home) }
     val centerFocusRequester = remember { FocusRequester() }
@@ -160,6 +161,10 @@ fun NavigationDrawerScope.DrawerContent(
                     NavigationDrawerItem(
                         modifier = Modifier
                             .onFocusChanged { if (it.hasFocus) selectedItem = item }
+                            .ifElse(
+                                item == selectedItem,
+                                Modifier.focusRequester(drawerSelectedRequester)
+                            )
                             .ifElse(
                                 item == DrawerItem.Home,
                                 Modifier.focusRequester(centerFocusRequester)

@@ -87,6 +87,8 @@ fun MainScreen(
     val ugcFocusRequester = remember { FocusRequester() }
     val pgcFocusRequester = remember { FocusRequester() }
     val searchFocusRequester = remember { FocusRequester() }
+    //侧边栏当前选中项的焦点句柄：从内容页按左键回到侧边栏时落到当前 tab，而非顶部 User。
+    val drawerSelectedRequester = remember { FocusRequester() }
 
     val handleBack = {
         val currentTime = System.currentTimeMillis()
@@ -141,6 +143,7 @@ fun MainScreen(
                 onShowUserPanel = {
                     showUserPanel = true
                 },
+                drawerSelectedRequester = drawerSelectedRequester,
                 onFocusToContent = onFocusToContent,
                 onLogin = {
                     context.startActivity(Intent(context, LoginActivity::class.java))
@@ -171,7 +174,10 @@ fun MainScreen(
                     DrawerItem.History -> HistoryContent(navFocusRequester = historyFocusRequester, historyViewModel = historyViewModel)
                     DrawerItem.Favorite -> FavoriteContent(navFocusRequester = favoriteFocusRequester, favoriteViewModel = favoriteViewModel)
                     DrawerItem.Following -> FollowingContent(navFocusRequester = followingFocusRequester)
-                    DrawerItem.Live -> LiveContent(navFocusRequester = liveFocusRequester)
+                    DrawerItem.Live -> LiveContent(
+                        navFocusRequester = liveFocusRequester,
+                        drawerSelectedRequester = drawerSelectedRequester
+                    )
                     DrawerItem.UGC -> UgcContent(navFocusRequester = ugcFocusRequester)
                     DrawerItem.PGC -> PgcContent(navFocusRequester = pgcFocusRequester)
                     DrawerItem.Search -> SearchInputScreen(defaultFocusRequester = searchFocusRequester)
