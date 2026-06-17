@@ -35,7 +35,6 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.FilterChip
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import dev.aaa1115910.biliapi.http.entity.live.LiveArea
 import dev.aaa1115910.bv.util.OnBottomReached
 import dev.aaa1115910.bv.util.isDpadLeft
 import dev.aaa1115910.bv.util.isKeyDown
@@ -62,11 +61,6 @@ fun LiveContent(
     var focusInList by remember { mutableStateOf(false) }
     var gridIndex by remember { mutableIntStateOf(0) }
     val gridState = rememberLazyGridState()
-
-    //目录中第一个子分区，作为默认焦点锚点（loadHome 会自动选中它）。
-    val firstArea: LiveArea? = remember(liveViewModel.parentAreas) {
-        liveViewModel.parentAreas.firstNotNullOfOrNull { it.list.firstOrNull() }
-    }
 
     //首次进入加载分区目录与第一个子分区的直播间
     LaunchedEffect(Unit) {
@@ -109,12 +103,14 @@ fun LiveContent(
                     items = parentArea.list,
                     key = { area -> "area-${area.id}" }
                 ) { area ->
-                    val isFirst = area.id == firstArea?.id
+                    //焦点锚点挂在“当前选中”的分区上：从网格按左键返回时落到选中项，
+                    //而非第一个（loadHome 已自动选中第一个分区，故初始焦点不变）。
+                    val isSelected = liveViewModel.selectedArea?.area == area
                     FilterChip(
                         modifier = Modifier
                             .width(200.dp)
-                            .then(if (isFirst) Modifier.focusRequester(navFocusRequester) else Modifier),
-                        selected = liveViewModel.selectedArea?.area == area,
+                            .then(if (isSelected) Modifier.focusRequester(navFocusRequester) else Modifier),
+                        selected = isSelected,
                         onClick = {
                             scope.launch { liveViewModel.selectArea(parentArea, area) }
                         }
