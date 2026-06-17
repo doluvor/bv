@@ -52,7 +52,7 @@ class LiveViewModel(
             parentAreas.clearWithMain()
             parentAreas.addAllWithMainContext(home.areas)
             selectedArea = null
-            rooms.clear()
+            rooms.clearWithMain()
             nextPage = 1
             noMore = false
             rooms.addAllWithMainContext(home.recommendedRooms)
@@ -63,14 +63,15 @@ class LiveViewModel(
             }
         }
         loading = false
+        refreshing = false
     }
 
     suspend fun selectArea(parentArea: LiveParentArea, area: LiveArea) {
         selectedArea = LiveAreaSelection(parentArea, area)
-        rooms.clear()
+        rooms.clearWithMain()
         nextPage = 1
         noMore = false
-        loadMore()
+        loadMoreInternal()
     }
 
     suspend fun selectRecommended() {
@@ -81,13 +82,20 @@ class LiveViewModel(
 
     suspend fun loadMore() {
         if (loading || noMore) return
-        val selection = selectedArea
+        loadMoreInternal()
+    }
+
+    private suspend fun loadMoreInternal() {
+        val startSelection = selectedArea
         loading = true
         runCatching {
+            val selection = selectedArea
             if (selection == null) {
                 // recommended list is not paged in v1; just re-fetch home
                 val home = liveAreaRepository.getAreaHome()
-                rooms.clear()
+                // Stale in-flight fetch: user switched away from recommended.
+                if (selectedArea != startSelection) return@runCatching
+                rooms.clearWithMain()
                 rooms.addAllWithMainContext(home.recommendedRooms)
                 noMore = true
             } else {
@@ -96,6 +104,8 @@ class LiveViewModel(
                     areaId = selection.area.id,
                     page = nextPage
                 )
+                // Stale in-flight fetch: user switched to a different area.
+                if (selectedArea != startSelection) return@runCatching
                 if (page.list.isNotEmpty()) {
                     nextPage = page.nextPage
                     rooms.addAllWithMainContext(page.list)
