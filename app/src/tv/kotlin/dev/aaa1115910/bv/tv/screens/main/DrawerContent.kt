@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.People
@@ -149,6 +150,7 @@ fun NavigationDrawerScope.DrawerContent(
                 add(DrawerItem.History)
                 add(DrawerItem.Favorite)
                 add(DrawerItem.Following)
+                add(DrawerItem.Live)
                 if (!BuildConfig.MINIMAL_MODE) {
                     add(DrawerItem.UGC)
                     add(DrawerItem.PGC)
@@ -202,6 +204,7 @@ enum class DrawerItem(
     History(displayName = "历史记录", displayIcon = Icons.Default.History),
     Favorite(displayName = "收藏", displayIcon = Icons.Default.Favorite),
     Following(displayName = "关注", displayIcon = Icons.Default.People),
+    Live(displayName = "直播", displayIcon = Icons.Default.LiveTv),
     UGC(displayName = "UGC", displayIcon = Icons.Default.OndemandVideo),
     PGC(displayName = "PGC", displayIcon = Icons.Default.Movie),
     Settings(displayName = "设置", displayIcon = Icons.Default.Settings), ;
