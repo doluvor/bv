@@ -36,7 +36,14 @@ data class LiveStreamCodec(
     @SerialName("codec_name") val codecName: String = "",
     @SerialName("current_qn") val currentQn: Int = 0,
     @SerialName("base_url") val baseUrl: String = "",
-    val url: List<String> = emptyList()
+    @SerialName("url_info") val urlInfo: List<LiveStreamUrlInfo> = emptyList()
+)
+
+/** 直播流地址由 host + baseUrl + extra 拼接（v2 playurl 的 url_info 结构）。 */
+@Serializable
+data class LiveStreamUrlInfo(
+    val host: String = "",
+    val extra: String = ""
 )
 
 @Serializable

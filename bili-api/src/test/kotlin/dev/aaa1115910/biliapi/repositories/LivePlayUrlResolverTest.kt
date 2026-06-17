@@ -4,6 +4,7 @@ import dev.aaa1115910.biliapi.http.entity.live.LivePlayUrlV2Data
 import dev.aaa1115910.biliapi.http.entity.live.LiveStream
 import dev.aaa1115910.biliapi.http.entity.live.LiveStreamCodec
 import dev.aaa1115910.biliapi.http.entity.live.LiveStreamFormat
+import dev.aaa1115910.biliapi.http.entity.live.LiveStreamUrlInfo
 import dev.aaa1115910.biliapi.http.entity.live.Playurl
 import dev.aaa1115910.biliapi.http.entity.live.PlayurlInfo
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -12,90 +13,87 @@ import org.junit.jupiter.api.Test
 
 class LivePlayUrlResolverTest {
 
-    private fun hlsTs(qn: Int, vararg urls: String) = LivePlayUrlV2Data(
-        playurlInfo = PlayurlInfo(
-            playurl = Playurl(
-                stream = listOf(
-                    LiveStream(
-                        protocolName = "http_hls",
-                        format = listOf(
-                            LiveStreamFormat(
-                                formatName = "ts",
-                                codec = listOf(LiveStreamCodec(currentQn = qn, url = urls.toList()))
-                            )
+    private val host = "https://h.test"
+
+    /** codec with one url_info entry; resolved URL == host + baseUrl (+ extra). */
+    private fun codec(qn: Int, baseUrl: String, extra: String = "") = LiveStreamCodec(
+        codecName = "avc",
+        currentQn = qn,
+        baseUrl = baseUrl,
+        urlInfo = listOf(LiveStreamUrlInfo(host = host, extra = extra))
+    )
+
+    /** Build a LivePlayUrlV2Data with one stream and the given (formatName -> codecs). */
+    private fun data(protocol: String, vararg formatCodecs: Pair<String, List<LiveStreamCodec>>) =
+        LivePlayUrlV2Data(
+            playurlInfo = PlayurlInfo(
+                playurl = Playurl(
+                    stream = listOf(
+                        LiveStream(
+                            protocolName = protocol,
+                            format = formatCodecs.map { (fn, cs) ->
+                                LiveStreamFormat(formatName = fn, codec = cs)
+                            }
                         )
                     )
                 )
             )
         )
-    )
 
     @Test
-    fun `returns ts url when http_hls ts present`() {
-        val data = hlsTs(qn = 10000, "https://hls/ts.m3u8")
-        val resolved = LivePlayUrlResolver.resolve(data)
-        assertEquals("https://hls/ts.m3u8", resolved?.url)
+    fun `returns assembled ts url when http_hls ts present`() {
+        val resolved = LivePlayUrlResolver.resolve(data("http_hls", "ts" to listOf(codec(10000, "/ts.m3u8"))))
+        assertEquals("$host/ts.m3u8", resolved?.url)
         assertEquals("ts", resolved?.formatName)
         assertEquals(10000, resolved?.qn)
     }
 
     @Test
     fun `prefers ts over fmp4`() {
-        val data = LivePlayUrlV2Data(
-            playurlInfo = PlayurlInfo(playurl = Playurl(stream = listOf(
-                LiveStream(protocolName = "http_hls", format = listOf(
-                    LiveStreamFormat(formatName = "fmp4",
-                        codec = listOf(LiveStreamCodec(currentQn = 10000, url = listOf("https://hls/fmp4.m3u8")))),
-                    LiveStreamFormat(formatName = "ts",
-                        codec = listOf(LiveStreamCodec(currentQn = 10000, url = listOf("https://hls/ts.m3u8"))))
-                ))
-            )))
+        val data = data(
+            "http_hls",
+            "fmp4" to listOf(codec(10000, "/fmp4.m3u8")),
+            "ts" to listOf(codec(10000, "/ts.m3u8"))
         )
-        assertEquals("https://hls/ts.m3u8", LivePlayUrlResolver.resolve(data)?.url)
+        assertEquals("$host/ts.m3u8", LivePlayUrlResolver.resolve(data)?.url)
     }
 
     @Test
     fun `falls back to fmp4 when ts absent`() {
-        val data = LivePlayUrlV2Data(
-            playurlInfo = PlayurlInfo(playurl = Playurl(stream = listOf(
-                LiveStream(protocolName = "http_hls", format = listOf(
-                    LiveStreamFormat(formatName = "fmp4",
-                        codec = listOf(LiveStreamCodec(currentQn = 10000, url = listOf("https://hls/fmp4.m3u8"))))
-                ))
-            )))
-        )
-        val resolved = LivePlayUrlResolver.resolve(data)
-        assertEquals("https://hls/fmp4.m3u8", resolved?.url)
+        val resolved = LivePlayUrlResolver.resolve(data("http_hls", "fmp4" to listOf(codec(10000, "/fmp4.m3u8"))))
+        assertEquals("$host/fmp4.m3u8", resolved?.url)
         assertEquals("fmp4", resolved?.formatName)
     }
 
     @Test
     fun `picks highest current_qn`() {
-        val data = LivePlayUrlV2Data(
-            playurlInfo = PlayurlInfo(playurl = Playurl(stream = listOf(
-                LiveStream(protocolName = "http_hls", format = listOf(
-                    LiveStreamFormat(formatName = "ts", codec = listOf(
-                        LiveStreamCodec(currentQn = 400, url = listOf("https://hls/400.m3u8")),
-                        LiveStreamCodec(currentQn = 10000, url = listOf("https://hls/10k.m3u8"))
-                    ))
-                ))
-            )))
+        val data = data(
+            "http_hls",
+            "ts" to listOf(codec(400, "/400.m3u8"), codec(10000, "/10k.m3u8"))
         )
-        assertEquals("https://hls/10k.m3u8", LivePlayUrlResolver.resolve(data)?.url)
+        assertEquals("$host/10k.m3u8", LivePlayUrlResolver.resolve(data)?.url)
         assertEquals(10000, LivePlayUrlResolver.resolve(data)?.qn)
     }
 
     @Test
-    fun `returns null when only flv http_stream available`() {
-        val data = LivePlayUrlV2Data(
-            playurlInfo = PlayurlInfo(playurl = Playurl(stream = listOf(
-                LiveStream(protocolName = "http_stream", format = listOf(
-                    LiveStreamFormat(formatName = "flv",
-                        codec = listOf(LiveStreamCodec(currentQn = 10000, url = listOf("https://flv/x.flv"))))
-                ))
-            )))
+    fun `appends url_info extra after base_url`() {
+        val resolved = LivePlayUrlResolver.resolve(
+            data("http_hls", "ts" to listOf(codec(10000, "/ts.m3u8?", extra = "expires=1&sign=abc")))
         )
-        assertNull(LivePlayUrlResolver.resolve(data))
+        assertEquals("$host/ts.m3u8?expires=1&sign=abc", resolved?.url)
+    }
+
+    @Test
+    fun `returns null when only flv http_stream available`() {
+        assertNull(LivePlayUrlResolver.resolve(data("http_stream", "flv" to listOf(codec(10000, "/x.flv")))))
+    }
+
+    @Test
+    fun `returns null when http_hls codec has empty url_info`() {
+        val codecWithoutInfo = LiveStreamCodec(
+            codecName = "avc", currentQn = 10000, baseUrl = "/ts.m3u8", urlInfo = emptyList()
+        )
+        assertNull(LivePlayUrlResolver.resolve(data("http_hls", "ts" to listOf(codecWithoutInfo))))
     }
 
     @Test
