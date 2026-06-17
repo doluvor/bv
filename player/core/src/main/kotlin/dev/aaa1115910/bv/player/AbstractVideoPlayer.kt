@@ -16,6 +16,9 @@ abstract class AbstractVideoPlayer {
     /** 设置播放地址 */
     abstract fun playUrl(videoUrl: String? = null, audioUrl: String? = null)
 
+    /** 设置直播播放地址（HLS）。默认空实现，由支持直播的后端覆写。 */
+    open fun playLiveUrl(videoUrl: String) {}
+
     /** 准备开始播放 */
     abstract fun prepare()
 

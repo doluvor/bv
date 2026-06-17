@@ -16,6 +16,7 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
+import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.MergingMediaSource
@@ -145,6 +146,14 @@ class ExoMediaPlayer(
 
         val mediaSources = listOfNotNull(videoMediaSource, audioMediaSource)
         mMediaSource = MergingMediaSource(*mediaSources.toTypedArray())
+    }
+
+    @OptIn(UnstableApi::class)
+    override fun playLiveUrl(videoUrl: String) {
+        malformedRetryCount = 0
+        mMediaSource = HlsMediaSource.Factory(dataSourceFactory)
+            .setLoadErrorHandlingPolicy(customLoadErrorHandlingPolicy)
+            .createMediaSource(MediaItem.fromUri(videoUrl))
     }
 
     @OptIn(UnstableApi::class)
