@@ -12,19 +12,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Switch
 import androidx.tv.material3.Text
+import dev.aaa1115910.bv.player.AkDanmakuPlayer
 import dev.aaa1115910.bv.player.BvVideoPlayer
 import dev.aaa1115910.bv.player.VideoPlayerListener
 import dev.aaa1115910.bv.viewmodel.live.LiveLoadState
 import dev.aaa1115910.bv.viewmodel.live.LivePlayerViewModel
+import dev.aaa1115910.bv.util.fInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -40,9 +50,20 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 fun LivePlayerScreen(viewModel: LivePlayerViewModel) {
     val context = LocalContext.current
     val logger = KotlinLogging.logger("LivePlayerScreen")
+    val scope = rememberCoroutineScope()
 
     // 播放器实例由 Activity 创建后赋值；未赋值时（理论上不会发生）不渲染 surface。
     val videoPlayer = viewModel.videoPlayer
+
+    // 弹幕开关（默认开启）。关闭时仅隐藏覆盖层，不影响 WebSocket 订阅。
+    var danmakuEnabled by remember { mutableStateOf(true) }
+    val toggleFocusRequester = remember { FocusRequester() }
+
+    // 初始化弹幕引擎（构造 DanmakuPlayer）。引擎由 VM 持有，Screen 只负责绑定 View。
+    LaunchedEffect(Unit) {
+        runCatching { viewModel.initDanmakuPlayer() }
+            .onFailure { logger.fInfo { "init danmaku player failed: ${it.message}" } }
+    }
 
     val playerListener = remember(viewModel) {
         object : VideoPlayerListener {
@@ -56,6 +77,8 @@ fun LivePlayerScreen(viewModel: LivePlayerViewModel) {
 
             override fun onPlay() {
                 logger.info { "live onPlay" }
+                // 播放开始后订阅直播弹幕。重复 onPlay 由 startDanmaku 内部去重（先 cancel 旧 job）。
+                viewModel.startDanmaku(scope)
             }
 
             override fun onPause() {
@@ -92,16 +115,81 @@ fun LivePlayerScreen(viewModel: LivePlayerViewModel) {
             )
         }
 
-        // Phase 4: AkDanmakuPlayer overlay + danmaku toggle
+        // 弹幕覆盖层：仅在开启时渲染。位于画面之上、加载/状态覆盖层之下。
+        if (danmakuEnabled) {
+            AkDanmakuPlayer(
+                modifier = Modifier.fillMaxSize(),
+                danmakuPlayer = viewModel.danmakuPlayer
+            )
+        }
 
         when (viewModel.loadState) {
             LiveLoadState.Loading -> CenterHint("加载中…")
             LiveLoadState.NotLive -> CenterHint("未开播")
             LiveLoadState.Unplayable -> CenterHint("无法播放该直播间")
-            LiveLoadState.Playing -> LiveBadge(
-                modifier = Modifier.align(Alignment.TopStart),
-                title = viewModel.title,
-                uname = viewModel.uname
+            LiveLoadState.Playing -> {
+                LiveBadge(
+                    modifier = Modifier.align(Alignment.TopStart),
+                    title = viewModel.title,
+                    uname = viewModel.uname
+                )
+                // 弹幕开关 + 连接失败提示（右上角，D-pad 可聚焦）
+                DanmakuControl(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    enabled = danmakuEnabled,
+                    onToggle = { danmakuEnabled = it },
+                    connected = viewModel.danmakuConnected,
+                    focusRequester = toggleFocusRequester
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 直播弹幕开关控件 + 连接状态提示。极简实现：一个可聚焦的 [Switch]（带“弹幕”标签），
+ * 连接失败时在下方显示“弹幕连接失败”。
+ */
+@Composable
+private fun DanmakuControl(
+    modifier: Modifier = Modifier,
+    enabled: Boolean,
+    onToggle: (Boolean) -> Unit,
+    connected: Boolean,
+    focusRequester: FocusRequester
+) {
+    Column(
+        modifier = modifier
+            .padding(24.dp),
+        horizontalAlignment = Alignment.End
+    ) {
+        Row(
+            modifier = Modifier
+                .focusRequester(focusRequester)
+                .background(
+                    Color.Black.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "弹幕",
+                color = Color.White,
+                style = MaterialTheme.typography.labelLarge
+            )
+            Switch(
+                checked = enabled,
+                onCheckedChange = onToggle
+            )
+        }
+        if (!connected) {
+            Text(
+                modifier = Modifier.padding(top = 6.dp),
+                text = "弹幕连接失败",
+                color = Color.White.copy(alpha = 0.7f),
+                style = MaterialTheme.typography.labelSmall
             )
         }
     }

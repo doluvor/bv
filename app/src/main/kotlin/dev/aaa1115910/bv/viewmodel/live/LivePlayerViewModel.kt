@@ -3,17 +3,28 @@ package dev.aaa1115910.bv.viewmodel.live
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
+import com.kuaishou.akdanmaku.data.DanmakuItemData
+import com.kuaishou.akdanmaku.render.SimpleRenderer
+import com.kuaishou.akdanmaku.ui.DanmakuPlayer
+import dev.aaa1115910.biliapi.http.entity.live.DanmakuEvent
 import dev.aaa1115910.biliapi.repositories.LiveRoomRepository
+import dev.aaa1115910.biliapi.websocket.LiveDataWebSocket
 import dev.aaa1115910.bv.BVApp
 import dev.aaa1115910.bv.player.AbstractVideoPlayer
 import dev.aaa1115910.bv.util.fError
 import dev.aaa1115910.bv.util.fInfo
 import dev.aaa1115910.bv.util.toast
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.annotation.KoinViewModel
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * 直播播放页 ViewModel。播放器实例由 Activity 创建后赋值给 [videoPlayer]。
@@ -26,6 +37,24 @@ class LivePlayerViewModel(
     private val logger = KotlinLogging.logger {}
 
     var videoPlayer: AbstractVideoPlayer? = null
+
+    /**
+     * akdanmaku 弹幕引擎实例。由本 VM 拥有（与 [dev.aaa1115910.bv.viewmodel.VideoPlayerV3ViewModel]
+     * 的点播路径一致：VM 构造 `DanmakuPlayer(SimpleRenderer())`，Screen 通过 [AkDanmakuPlayer]
+     * 绑定 [com.kuaishou.akdanmaku.ui.DanmakuView]，本 VM 负责在 onCleared 中 release）。
+     */
+    var danmakuPlayer: DanmakuPlayer? = null
+        private set
+
+    /**
+     * 直播弹幕 WebSocket 连接是否正常。连接建立失败时置 false，Screen 据此显示一个轻量提示。
+     */
+    var danmakuConnected by mutableStateOf(true)
+        private set
+
+    private var danmakuJob: Job? = null
+    private val danmakuIdSeq = AtomicLong(0L)
+
     var roomId by mutableStateOf(0)
     var title by mutableStateOf("")
     var uname by mutableStateOf("")
@@ -67,8 +96,78 @@ class LivePlayerViewModel(
         }
     }
 
+    /**
+     * 初始化弹幕引擎（镜像点播路径）。应在 Screen 首次渲染时调用一次，随后再调用 [startDanmaku]。
+     * 必须在主线程构造 DanmakuPlayer（其内部依赖 HandlerThread/View），故切到 Main。
+     */
+    suspend fun initDanmakuPlayer() = withContext(Dispatchers.Main) {
+        if (danmakuPlayer == null) {
+            danmakuPlayer = DanmakuPlayer(SimpleRenderer())
+        }
+    }
+
+    /**
+     * 启动直播弹幕 WebSocket 订阅。非 suspend：内部启动一个受 [scope] 管理的子 Job。
+     *
+     * 注意：[LiveDataWebSocket.connectLiveEvent] 是一个 suspend 函数，但其内部用 `client.launch`
+     * 启动 wss 循环后立即返回——因此取消调用方协程并不会真正关闭 WebSocket。这里通过 [scope]
+     * 持有 Job 做尽力而为的取消；真正的资源释放在 [onCleared] 中对 danmakuPlayer 的 release。
+     *
+     * 重复调用会先取消上一次的订阅。
+     */
+    fun startDanmaku(scope: CoroutineScope) {
+        danmakuJob?.cancel()
+        danmakuConnected = true
+        val roomId = this.roomId
+        if (roomId <= 0) return
+        // 启动弹幕引擎的帧循环（镜像点播 onPlay -> start）。此时 AkDanmakuPlayer 的
+        // LaunchedEffect 已完成 bindView（onPlay 来自视频播放器，晚于首次组合）。
+        runCatching { danmakuPlayer?.start() }
+        danmakuJob = scope.launch(Dispatchers.IO) {
+            runCatching {
+                LiveDataWebSocket.connectLiveEvent(roomId) { event ->
+                    if (event is DanmakuEvent) sendDanmaku(event)
+                }
+            }.onFailure {
+                logger.fError { "Live danmaku connect failed: ${it.stackTraceToString()}" }
+                danmakuConnected = false
+            }
+        }
+    }
+
+    /**
+     * 把一条直播弹幕推送给 akdanmaku 引擎即时渲染。
+     *
+     * 使用库的 ad-hoc 投递方法 [DanmakuPlayer.send]（字节码确认存在：
+     * `send(data) -> obtainItem(data) -> DataSystem.addItem`，下一帧立即绘制）。
+     * `position = 0` 保证条目时间 <= 引擎当前时钟，从而被立即渲染（直播为挂钟时间，
+     * 无需像点播那样按视频时间轴定位）。
+     */
+    private fun sendDanmaku(event: DanmakuEvent) {
+        val player = danmakuPlayer ?: return
+        if (player.isReleased) return
+        val data = DanmakuItemData(
+            danmakuId = danmakuIdSeq.incrementAndGet(),
+            position = 0L,
+            content = event.content,
+            mode = DanmakuItemData.DANMAKU_MODE_ROLLING,
+            textSize = 25,
+            textColor = Color.White.toArgb()
+        )
+        runCatching {
+            // send 内部会 post 到 action 线程；无需切 Main。
+            player.send(data)
+        }.onFailure {
+            logger.fError { "send live danmaku failed: ${it.message}" }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
+        danmakuJob?.cancel()
+        danmakuJob = null
+        danmakuPlayer?.release()
+        danmakuPlayer = null
         videoPlayer?.release()
         videoPlayer = null
     }
