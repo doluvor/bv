@@ -35,4 +35,34 @@ class BiliLiveHttpApiTest {
         }
     }
 
+    @Test
+    fun `get live area list`() {
+        Assertions.assertDoesNotThrow {
+            runBlocking {
+                val response = BiliLiveHttpApi.getLiveAreaList()
+                println(response)
+            }
+        }
+    }
+
+    @Test
+    fun `get live room list`() {
+        Assertions.assertDoesNotThrow {
+            runBlocking {
+                val response = BiliLiveHttpApi.getLiveRoomList(parentAreaId = 2, areaId = 21, page = 1)
+                println(response)
+            }
+        }
+    }
+
+    @Test
+    fun `get live room play info v2`() {
+        Assertions.assertDoesNotThrow {
+            runBlocking {
+                val response = BiliLiveHttpApi.getLiveRoomPlayInfoV2(roomId = 6)
+                println(response)
+            }
+        }
+    }
+
 }

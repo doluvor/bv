@@ -3,6 +3,9 @@ package dev.aaa1115910.biliapi.http
 import dev.aaa1115910.biliapi.http.entity.BiliResponse
 import dev.aaa1115910.biliapi.http.entity.live.DanmuInfoData
 import dev.aaa1115910.biliapi.http.entity.live.HistoryDanmaku
+import dev.aaa1115910.biliapi.http.entity.live.LiveAreaListData
+import dev.aaa1115910.biliapi.http.entity.live.LivePlayUrlV2Data
+import dev.aaa1115910.biliapi.http.entity.live.LiveRoomListData
 import dev.aaa1115910.biliapi.http.entity.live.RoomPlayInfoData
 import dev.aaa1115910.biliapi.http.plugins.BiliUserAgent
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -13,6 +16,7 @@ import io.ktor.client.plugins.compression.ContentEncoding
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.http.URLProtocol
 import io.ktor.serialization.kotlinx.json.json
@@ -72,6 +76,47 @@ object BiliLiveHttpApi {
     suspend fun getLiveDanmuHistory(roomId: Int): BiliResponse<HistoryDanmaku> =
         client.get("/xlive/web-room/v1/dM/gethistory") {
             parameter("roomid", roomId)
+        }.body()
+
+    /** 直播首页：分区树 + 推荐直播间 */
+    suspend fun getLiveAreaList(sessData: String = ""): BiliResponse<LiveAreaListData> =
+        client.get("/xlive/web-interface/v1/index/getList") {
+            if (sessData.isNotEmpty()) header("Cookie", "SESSDATA=$sessData;")
+        }.body()
+
+    /** 某子分区的直播间列表（分页） */
+    suspend fun getLiveRoomList(
+        parentAreaId: Int,
+        areaId: Int,
+        page: Int,
+        pageSize: Int = 30,
+        sessData: String = ""
+    ): BiliResponse<LiveRoomListData> =
+        client.get("/xlive/web-interface/v1/second/getList") {
+            parameter("parent_area_id", parentAreaId)
+            parameter("area_id", areaId)
+            parameter("page", page)
+            parameter("page_size", pageSize)
+            if (sessData.isNotEmpty()) header("Cookie", "SESSDATA=$sessData;")
+        }.body()
+
+    /** 直播间 v2 播放地址（结构化 playurl；v1 的 play_url 为 null 不可用） */
+    suspend fun getLiveRoomPlayInfoV2(
+        roomId: Int,
+        qn: Int = 10000,
+        sessData: String = ""
+    ): BiliResponse<LivePlayUrlV2Data> =
+        client.get("/xlive/web-room/v2/index/getRoomPlayInfo") {
+            parameter("room_id", roomId)
+            parameter("protocol", "0,1")
+            parameter("format", "0,1,2")
+            parameter("codec", "0,1")
+            parameter("qn", qn)
+            parameter("platform", "web")
+            parameter("ptype", 16)
+            parameter("dolby", 5)
+            parameter("panorama", 1)
+            if (sessData.isNotEmpty()) header("Cookie", "SESSDATA=$sessData;")
         }.body()
 
 }
