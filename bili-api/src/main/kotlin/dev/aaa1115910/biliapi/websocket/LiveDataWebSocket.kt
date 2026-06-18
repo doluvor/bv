@@ -12,6 +12,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.request.header
 import io.ktor.client.plugins.websocket.wss
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.buildPacket
@@ -70,7 +71,13 @@ object LiveDataWebSocket {
         val realRoomId =
             BiliLiveHttpApi.getLiveRoomPlayInfo(roomId).data?.roomId
                 ?: throw CancellationException()
-        val hosts = danmuInfo.hostList.last()
+        val hostList = danmuInfo.hostList
+        logger.info { "danmu hosts: ${hostList.joinToString { "${it.host}:${it.wssPort}" }}" }
+        // 海外优先选 SG/overseas 弹幕节点（如 hw-sg-live-comet-*.chat.bilibili.com），
+        // 其余多为大陆节点，海外连不上；都没有时回退到最后一个。
+        val hosts = hostList.firstOrNull { it.host.contains("sg", ignoreCase = true) }
+            ?: hostList.last()
+        logger.info { "danmu selected host: ${hosts.host}:${hosts.wssPort}" }
 
         val data = buildJsonObject {
             put("uid", 0)
@@ -94,7 +101,8 @@ object LiveDataWebSocket {
             client.wss(
                 host = hosts.host,
                 port = hosts.wssPort,
-                path = "/sub"
+                path = "/sub",
+                request = { header("Origin", "https://live.bilibili.com") }
             ) {
                 val byte = b.readByteArray()
                 outgoing.send(Frame.Binary(true, byte))
