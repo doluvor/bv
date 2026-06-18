@@ -161,6 +161,16 @@ class ExoMediaPlayer(
     }
 
     @OptIn(UnstableApi::class)
+    override fun playFlvUrl(videoUrl: String) {
+        malformedRetryCount = 0
+        // ProgressiveMediaSource 默认使用 DefaultExtractorsFactory（含 FlvExtractor），
+        // 会按 .flv 内容自动选择 FLV 提取器，适用于直播 FLV 流。
+        mMediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+            .setLoadErrorHandlingPolicy(customLoadErrorHandlingPolicy)
+            .createMediaSource(MediaItem.fromUri(videoUrl))
+    }
+
+    @OptIn(UnstableApi::class)
     override fun prepare() {
         mPlayer?.setMediaSource(mMediaSource!!)
         mPlayer?.prepare()

@@ -86,11 +86,17 @@ class LivePlayerViewModel(
                 loadState = LiveLoadState.Unplayable
                 return@runCatching
             }
-            logger.fInfo { "Play live room $roomId -> $url" }
+            logger.fInfo { "Play live room $roomId (${
+                resolved.protocolName
+            }/${resolved.formatName}) -> $url" }
             withContext(Dispatchers.Main) {
-                videoPlayer?.playLiveUrl(url)
-                videoPlayer?.prepare()
-                videoPlayer?.start()
+                val player = videoPlayer
+                if (player != null) {
+                    // FLV(gotcha07) 走 progressive；fmp4/ts HLS 走 HlsMediaSource。
+                    if (resolved.formatName == "flv") player.playFlvUrl(url) else player.playLiveUrl(url)
+                    player.prepare()
+                    player.start()
+                }
             }
             loadState = if (videoPlayer != null) LiveLoadState.Playing else LiveLoadState.Unplayable
         }.onFailure {
