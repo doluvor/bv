@@ -68,12 +68,17 @@ fun HttpRequestBuilder.encAppGet() {
 }
 
 suspend fun HttpRequestBuilder.encWbi() {
+    if (BiliHttpApi.wbiImgKey == null || BiliHttpApi.wbiSubKey == null) BiliHttpApi.updateWbi()
+    encWbiSync()
+}
+
+/** 非 suspend 版本：假设 wbi keys 已加载（先调用 BiliHttpApi.updateWbi()）。可在 Ktor 非_suspend 请求块中使用。 */
+fun HttpRequestBuilder.encWbiSync() {
     val getMixinKey: (orig: String) -> String = { orig ->
         val mixinKey = mixinKeyEncTab.fold("") { s, i -> s + orig[i] }
         mixinKey.substring(0, 32)
     }
 
-    if (BiliHttpApi.wbiImgKey == null || BiliHttpApi.wbiSubKey == null) BiliHttpApi.updateWbi()
     require(BiliHttpApi.wbiImgKey != null && BiliHttpApi.wbiSubKey != null) { "Wbi keys can't be null!" }
     val mixinKey = getMixinKey(BiliHttpApi.wbiImgKey + BiliHttpApi.wbiSubKey)
 

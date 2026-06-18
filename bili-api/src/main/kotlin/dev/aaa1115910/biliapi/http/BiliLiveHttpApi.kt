@@ -8,6 +8,7 @@ import dev.aaa1115910.biliapi.http.entity.live.LivePlayUrlV2Data
 import dev.aaa1115910.biliapi.http.entity.live.LiveRoomInfo
 import dev.aaa1115910.biliapi.http.entity.live.RoomPlayInfoData
 import dev.aaa1115910.biliapi.http.plugins.BiliUserAgent
+import dev.aaa1115910.biliapi.http.util.encWbiSync
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -56,21 +57,26 @@ object BiliLiveHttpApi {
 
     /**
      * 获取直播间[roomId]的弹幕连接地址等信息，例如 token。
-     * 该接口有风控(-352)，需要 buvid3（以及登录态 SESSDATA）才能通过。
+     * 该接口有 -352 风控，需要 WBI 签名(w_rid/wts)（以及 buvid3/SESSDATA）。
      */
     suspend fun getLiveDanmuInfo(
         roomId: Int,
         sessData: String = "",
         buvid3: String = ""
-    ): BiliResponse<DanmuInfoData> =
-        client.get("/xlive/web-room/v1/index/getDanmuInfo") {
+    ): BiliResponse<DanmuInfoData> {
+        // 确保 wbi keys 已加载（与 BiliHttpApi 共享同一套 wbi keys）。
+        if (BiliHttpApi.wbiImgKey == null || BiliHttpApi.wbiSubKey == null) BiliHttpApi.updateWbi()
+        return client.get("/xlive/web-room/v1/index/getDanmuInfo") {
             parameter("id", roomId)
+            parameter("type", 0)
             val cookieParts = listOfNotNull(
                 sessData.takeIf { it.isNotEmpty() }?.let { "SESSDATA=$it" },
                 buvid3.takeIf { it.isNotEmpty() }?.let { "buvid3=$it" }
             )
             if (cookieParts.isNotEmpty()) header("Cookie", cookieParts.joinToString("; "))
+            encWbiSync()
         }.body()
+    }
 
     /**
      * 获取直播间[roomId]的信息
