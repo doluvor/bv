@@ -18,12 +18,14 @@ class LiveRoomRepository(
 
     /** 解析 v2 playurl 为单个可播放地址；不可播放返回 null */
     suspend fun getPlayUrl(roomId: Int): ResolvedLivePlayUrl? {
-        // 请求超清(≈720P)。注：未登录时服务器会忽略 qn 并把画质封顶在 ~250；
-        // 登录时此处显式请求 250——是否生效以 "live resolved ... qn=" 日志为准。
+        // 服务器对“登录”请求会忽略 qn 参数、直接返回账号允许的最高画质（原画 10000，
+        // 码率可达 ~12Mbps，模拟器/低端盒子吃不消会卡顿/黑屏）。实测未登录请求会被
+        // 封顶在 ~250（超清≈720P），因此这里刻意不带 SESSDATA，强制走未登录的低画质流。
+        // TODO: 改为可设置的清晰度（登录态下用 app gRPC playurl 显式指定 qn）。
         val data = BiliLiveHttpApi.getLiveRoomPlayInfoV2(
             roomId,
             qn = PREFERRED_QN,
-            sessData = sessData
+            sessData = ""
         ).getResponseData()
         // 记录可用流与最终选择，便于排查“某些直播间黑屏/无法播放”。
         val variants = data.playurlInfo?.playurl?.stream?.joinToString { s ->
