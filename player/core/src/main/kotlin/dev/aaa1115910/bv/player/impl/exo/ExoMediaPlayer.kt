@@ -45,7 +45,11 @@ class ExoMediaPlayer(
     private val okHttpFactory =
         OkHttpDataSource.Factory(OkHttpUtil.generateCustomSslOkHttpClient(context)).apply {
             options.userAgent?.let { setUserAgent(it) }
-            options.referer?.let { setDefaultRequestProperties(mapOf("referer" to it)) }
+            val headers = buildMap {
+                options.referer?.let { put("referer", it) }
+                options.extraHeaders.forEach { (k, v) -> put(k, v) }
+            }
+            if (headers.isNotEmpty()) setDefaultRequestProperties(headers)
         }
 
     @OptIn(UnstableApi::class)
