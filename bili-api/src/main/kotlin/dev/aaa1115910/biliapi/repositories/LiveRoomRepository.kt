@@ -12,6 +12,9 @@ class LiveRoomRepository(
     private val logger = KotlinLogging.logger {}
     private val sessData get() = authRepository.sessionData ?: ""
 
+    /** 直播弹幕 WebSocket 需要 SESSDATA（getDanmuInfo 接口有 -352 风控，需登录态）。 */
+    val sessionData: String get() = sessData
+
     /** live_status: 0 未开播, 1 直播中, 2 轮播 */
     suspend fun getLiveStatus(roomId: Int): Int =
         BiliLiveHttpApi.getLiveRoomPlayInfo(roomId).data?.liveStatus ?: 0

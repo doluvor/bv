@@ -64,10 +64,13 @@ object LiveDataWebSocket {
 
     suspend fun connectLiveEvent(
         roomId: Int,
+        sessData: String = "",
+        buvid3: String = "",
         onEvent: (event: LiveEvent) -> Unit
     ) {
         val danmuInfo =
-            BiliLiveHttpApi.getLiveDanmuInfo(roomId).data ?: throw CancellationException()
+            BiliLiveHttpApi.getLiveDanmuInfo(roomId, sessData = sessData, buvid3 = buvid3).data
+                ?: throw CancellationException()
         val realRoomId =
             BiliLiveHttpApi.getLiveRoomPlayInfo(roomId).data?.roomId
                 ?: throw CancellationException()

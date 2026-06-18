@@ -14,6 +14,7 @@ import dev.aaa1115910.biliapi.repositories.LiveRoomRepository
 import dev.aaa1115910.biliapi.websocket.LiveDataWebSocket
 import dev.aaa1115910.bv.BVApp
 import dev.aaa1115910.bv.player.AbstractVideoPlayer
+import dev.aaa1115910.bv.util.Prefs
 import dev.aaa1115910.bv.util.fError
 import dev.aaa1115910.bv.util.fInfo
 import dev.aaa1115910.bv.util.toast
@@ -136,8 +137,11 @@ class LivePlayerViewModel(
         // LaunchedEffect 已完成 bindView（onPlay 来自视频播放器，晚于首次组合）。
         runCatching { danmakuPlayer?.start() }
         danmakuJob = scope.launch(Dispatchers.IO) {
+            // getDanmuInfo 有 -352 风控，需登录态 SESSDATA（+ buvid3）。
+            val sessData = liveRoomRepository.sessionData
+            val buvid3 = Prefs.buvid3
             runCatching {
-                LiveDataWebSocket.connectLiveEvent(roomId) { event ->
+                LiveDataWebSocket.connectLiveEvent(roomId, sessData, buvid3) { event ->
                     if (event is DanmakuEvent) sendDanmaku(event)
                 }
             }.onFailure {

@@ -55,11 +55,21 @@ object BiliLiveHttpApi {
     }
 
     /**
-     * 获取直播间[roomId]的弹幕连接地址等信息，例如 token
+     * 获取直播间[roomId]的弹幕连接地址等信息，例如 token。
+     * 该接口有风控(-352)，需要 buvid3（以及登录态 SESSDATA）才能通过。
      */
-    suspend fun getLiveDanmuInfo(roomId: Int): BiliResponse<DanmuInfoData> =
+    suspend fun getLiveDanmuInfo(
+        roomId: Int,
+        sessData: String = "",
+        buvid3: String = ""
+    ): BiliResponse<DanmuInfoData> =
         client.get("/xlive/web-room/v1/index/getDanmuInfo") {
             parameter("id", roomId)
+            val cookieParts = listOfNotNull(
+                sessData.takeIf { it.isNotEmpty() }?.let { "SESSDATA=$it" },
+                buvid3.takeIf { it.isNotEmpty() }?.let { "buvid3=$it" }
+            )
+            if (cookieParts.isNotEmpty()) header("Cookie", cookieParts.joinToString("; "))
         }.body()
 
     /**
