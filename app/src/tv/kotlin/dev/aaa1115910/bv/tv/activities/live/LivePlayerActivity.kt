@@ -74,12 +74,12 @@ class LivePlayerActivity : ComponentActivity() {
     private fun initPlayer() {
         logger.info { "Init live player" }
         val roomId = intent.getIntExtra("roomId", 0)
-        // 直播 CDN 要求直播域 Referer 与 buvid3 反爬 Cookie；缺失会被静默丢连接（表现为 socket 超时）。
+        // 匹配网页播放器的媒体请求头：直播域 Referer + Origin（网页不发 Cookie）。
         val options = VideoPlayerOptions(
             userAgent = getString(R.string.video_player_user_agent_http),
             referer = "https://live.bilibili.com/$roomId",
             enableFfmpegAudioRenderer = Prefs.enableFfmpegAudioRenderer,
-            extraHeaders = mapOf("Cookie" to "buvid3=${Prefs.buvid3}")
+            extraHeaders = mapOf("Origin" to "https://live.bilibili.com")
         )
         // ViewModel 的 onCleared() 会负责 release，这里只负责创建与赋值。
         viewModel.videoPlayer = ExoPlayerFactory().create(this, options)

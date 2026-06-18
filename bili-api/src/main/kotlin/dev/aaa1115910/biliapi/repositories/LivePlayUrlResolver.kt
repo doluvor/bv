@@ -7,13 +7,15 @@ import dev.aaa1115910.biliapi.http.entity.live.LivePlayUrlV2Data
  * Picks one Media3-playable stream URL from a v2 playurl response.
  *
  * Order: protocol `http_hls` only (Media3 cannot play bilibili flv); within it,
- * format `ts` > `fmp4`; prefer codec `avc` (many devices/emulators lack HEVC
- * decode), else highest `current_qn`; first `url_info` entry.
+ * format `fmp4` > `ts` — fmp4 lives on the gotcha207 edge which is reachable
+ * overseas (the bilibili web player uses fmp4), whereas ts is on gotcha105 and
+ * times out outside mainland China; prefer codec `avc` (many devices/emulators
+ * lack HEVC decode), else highest `current_qn`; first `url_info` entry.
  * The URL is assembled as `url_info.host + base_url + url_info.extra`.
  * Returns null if no playable HLS stream exists.
  */
 object LivePlayUrlResolver {
-    private val HLS_FORMAT_PRIORITY = listOf("ts", "fmp4")
+    private val HLS_FORMAT_PRIORITY = listOf("fmp4", "ts")
 
     fun resolve(data: LivePlayUrlV2Data): ResolvedLivePlayUrl? {
         val streams = data.playurlInfo?.playurl?.stream ?: return null

@@ -49,20 +49,21 @@ class LivePlayUrlResolverTest {
     }
 
     @Test
-    fun `prefers ts over fmp4`() {
+    fun `prefers fmp4 over ts`() {
+        // fmp4 在 gotcha207 边缘，海外可达；ts 在 gotcha105，海外会超时。故优先 fmp4。
         val data = data(
             "http_hls",
             "fmp4" to listOf(codec(10000, "/fmp4.m3u8")),
             "ts" to listOf(codec(10000, "/ts.m3u8"))
         )
-        assertEquals("$host/ts.m3u8", LivePlayUrlResolver.resolve(data)?.url)
+        assertEquals("$host/fmp4.m3u8", LivePlayUrlResolver.resolve(data)?.url)
     }
 
     @Test
-    fun `falls back to fmp4 when ts absent`() {
-        val resolved = LivePlayUrlResolver.resolve(data("http_hls", "fmp4" to listOf(codec(10000, "/fmp4.m3u8"))))
-        assertEquals("$host/fmp4.m3u8", resolved?.url)
-        assertEquals("fmp4", resolved?.formatName)
+    fun `falls back to ts when fmp4 absent`() {
+        val resolved = LivePlayUrlResolver.resolve(data("http_hls", "ts" to listOf(codec(10000, "/ts.m3u8"))))
+        assertEquals("$host/ts.m3u8", resolved?.url)
+        assertEquals("ts", resolved?.formatName)
     }
 
     @Test
