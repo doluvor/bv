@@ -124,39 +124,32 @@ object LiveDataWebSocket {
             writePacket(ByteReadPacket(data))
         }
 
-        val job = client.launch {
-            client.wss(
-                host = hosts.host,
-                port = hosts.wssPort,
-                path = "/sub",
-                request = { header("Origin", "https://live.bilibili.com") }
-            ) {
-                logger.info { "danmu wss connected to ${hosts.host}; auth roomid=$realRoomId protover=3 tokenLen=${danmuInfo.token?.length}" }
-                val byte = b.readByteArray()
-                outgoing.send(Frame.Binary(true, byte))
-                logger.info { "danmu auth sent (${byte.size} bytes)" }
-                launch {
-                    delay(5000)
-                    while (isActive) {
-                        //println("send heart")
-                        outgoing.send(Frame.Binary(true, heartbeat))
-                        delay(30_000)
-                    }
-                }
+        client.wss(
+            host = hosts.host,
+            port = hosts.wssPort,
+            path = "/sub",
+            request = { header("Origin", "https://live.bilibili.com") }
+        ) {
+            logger.info { "danmu wss connected to ${hosts.host}; auth roomid=$realRoomId protover=3 tokenLen=${danmuInfo.token?.length}" }
+            val byte = b.readByteArray()
+            outgoing.send(Frame.Binary(true, byte))
+            logger.info { "danmu auth sent (${byte.size} bytes)" }
+            launch {
+                delay(5000)
                 while (isActive) {
-                    val frame = incoming.receive()
-                    val eventData = frame.data
-                    launch {
-
-                        handleLiveEventData(eventData).forEach { event ->
-                            onEvent(event)
-                        }
+                    outgoing.send(Frame.Binary(true, heartbeat))
+                    delay(30_000)
+                }
+            }
+            while (isActive) {
+                val frame = incoming.receive()
+                val eventData = frame.data
+                launch {
+                    handleLiveEventData(eventData).forEach { event ->
+                        onEvent(event)
                     }
                 }
             }
-        }
-        job.invokeOnCompletion {
-            it?.printStackTrace()
         }
     }
 
