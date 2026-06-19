@@ -85,7 +85,7 @@ object LiveDataWebSocket {
         val data = buildJsonObject {
             put("uid", 0)
             put("roomid", realRoomId)
-            put("protover", 2)
+            put("protover", 3)
             put("platform", "web")
             put("type", 2)
             put("key", danmuInfo.token)
@@ -107,7 +107,7 @@ object LiveDataWebSocket {
                 path = "/sub",
                 request = { header("Origin", "https://live.bilibili.com") }
             ) {
-                logger.info { "danmu wss connected to ${hosts.host}; auth roomid=$realRoomId protover=2 tokenLen=${danmuInfo.token?.length}" }
+                logger.info { "danmu wss connected to ${hosts.host}; auth roomid=$realRoomId protover=3 tokenLen=${danmuInfo.token?.length}" }
                 val byte = b.readByteArray()
                 outgoing.send(Frame.Binary(true, byte))
                 logger.info { "danmu auth sent (${byte.size} bytes)" }
