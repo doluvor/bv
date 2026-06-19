@@ -107,6 +107,7 @@ object LiveDataWebSocket {
                 path = "/sub",
                 request = { header("Origin", "https://live.bilibili.com") }
             ) {
+                logger.info { "danmu wss connected to ${hosts.host}, sending auth..." }
                 val byte = b.readByteArray()
                 outgoing.send(Frame.Binary(true, byte))
                 launch {
@@ -186,6 +187,7 @@ object LiveDataWebSocket {
 
             //认证包回复
             8 -> {
+                logger.info { "danmu auth ack received" }
                 bytePack.readByteArray(10)
             }
 
@@ -242,6 +244,7 @@ object LiveDataWebSocket {
     private fun handleLiveCMDEventString(strData: String): LiveEvent? {
         val dataJson = Json.parseToJsonElement(strData).jsonObject
         val cmd = dataJson["cmd"]!!.jsonPrimitive.content
+        if (cmd.startsWith("DANMU_MSG")) logger.info { "danmu cmd: $cmd" }
 
         when (cmd) {
             "COMBO_SEND" -> {}

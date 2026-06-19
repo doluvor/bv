@@ -160,8 +160,15 @@ class LivePlayerViewModel(
      * 无需像点播那样按视频时间轴定位）。
      */
     private fun sendDanmaku(event: DanmakuEvent) {
-        val player = danmakuPlayer ?: return
-        if (player.isReleased) return
+        val player = danmakuPlayer
+        if (player == null) {
+            logger.fInfo { "danmu dropped (engine null): ${event.content.take(30)}" }
+            return
+        }
+        if (player.isReleased) {
+            logger.fInfo { "danmu dropped (engine released): ${event.content.take(30)}" }
+            return
+        }
         val data = DanmakuItemData(
             danmakuId = danmakuIdSeq.incrementAndGet(),
             position = 0L,
@@ -170,6 +177,7 @@ class LivePlayerViewModel(
             textSize = 25,
             textColor = Color.White.toArgb()
         )
+        logger.fInfo { "danmu send: ${event.content.take(30)}" }
         runCatching {
             // send() runs inline on the caller thread; safe to call from the WebSocket IO callback
             // because DanmakuPlayer's internal DataSystem.addItem is synchronized.
