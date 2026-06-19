@@ -12,8 +12,10 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.plugins.websocket.wss
+import io.ktor.client.statement.bodyAsText
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.buildPacket
 import io.ktor.utils.io.core.remaining
@@ -38,7 +40,9 @@ import kotlinx.serialization.json.put
 
 object LiveDataWebSocket {
     private lateinit var client: HttpClient
+    private lateinit var spiClient: HttpClient
     private val logger = KotlinLogging.logger { }
+    private var cachedBuvid3: String? = null
 
     private val heartbeat = byteArrayOf(
         0, 0, 0, 0x1f,
@@ -60,6 +64,22 @@ object LiveDataWebSocket {
             BiliUserAgent()
             install(WebSockets)
         }
+        spiClient = HttpClient(OkHttp) {
+            BiliUserAgent()
+        }
+    }
+
+    /**
+     * 从 spi 接口获取真实 buvid3（弹幕 auth 需要：随机 buvid 能通过 auth 但收不到数据）。
+     * 结果缓存，避免每次进房间都请求。
+     */
+    private suspend fun ensureBuvid3(): String {
+        cachedBuvid3?.let { if (it.isNotEmpty()) return it }
+        cachedBuvid3 = runCatching {
+            val text = spiClient.get("https://api.bilibili.com/x/frontend/finger/spi").bodyAsText()
+            Json.parseToJsonElement(text).jsonObject["data"]!!.jsonObject["b_3"]!!.jsonPrimitive.content
+        }.getOrNull() ?: ""
+        return cachedBuvid3!!
     }
 
     suspend fun connectLiveEvent(
@@ -82,10 +102,14 @@ object LiveDataWebSocket {
             ?: hostList.last()
         logger.info { "danmu selected host: ${hosts.host}:${hosts.wssPort}" }
 
+        val buvid3 = ensureBuvid3()
+        logger.info { "danmu auth buvid3=$buvid3" }
+
         val data = buildJsonObject {
             put("uid", 0)
             put("roomid", realRoomId)
             put("protover", 3)
+            put("buvid", buvid3)
             put("platform", "web")
             put("type", 2)
             put("key", danmuInfo.token)
@@ -121,7 +145,6 @@ object LiveDataWebSocket {
                 }
                 while (isActive) {
                     val frame = incoming.receive()
-                    logger.info { "danmu frame received: ${frame.data.size} bytes" }
                     val eventData = frame.data
                     launch {
 
@@ -152,7 +175,6 @@ object LiveDataWebSocket {
     private fun handleLiveEventBody(head: FrameHeader, data: ByteArray): List<LiveEvent> {
         val result = mutableListOf<LiveEvent>()
         val bytePack = ByteReadPacket(data)
-        logger.info { "danmu frame type=${head.type} version=${head.version} size=${data.size}" }
         when (head.type) {
             //心跳包回复（人气值）
             3 -> {
