@@ -107,9 +107,10 @@ object LiveDataWebSocket {
                 path = "/sub",
                 request = { header("Origin", "https://live.bilibili.com") }
             ) {
-                logger.info { "danmu wss connected to ${hosts.host}, sending auth..." }
+                logger.info { "danmu wss connected to ${hosts.host}; auth roomid=$realRoomId protover=2 tokenLen=${danmuInfo.token?.length}" }
                 val byte = b.readByteArray()
                 outgoing.send(Frame.Binary(true, byte))
+                logger.info { "danmu auth sent (${byte.size} bytes)" }
                 launch {
                     delay(5000)
                     while (isActive) {
@@ -120,6 +121,7 @@ object LiveDataWebSocket {
                 }
                 while (isActive) {
                     val frame = incoming.receive()
+                    logger.info { "danmu frame received: ${frame.data.size} bytes" }
                     val eventData = frame.data
                     launch {
 
@@ -150,6 +152,7 @@ object LiveDataWebSocket {
     private fun handleLiveEventBody(head: FrameHeader, data: ByteArray): List<LiveEvent> {
         val result = mutableListOf<LiveEvent>()
         val bytePack = ByteReadPacket(data)
+        logger.info { "danmu frame type=${head.type} version=${head.version} size=${data.size}" }
         when (head.type) {
             //心跳包回复（人气值）
             3 -> {
